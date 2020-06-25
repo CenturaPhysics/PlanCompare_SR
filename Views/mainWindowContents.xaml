@@ -5,8 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PlanCompare_SR.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800" Width="940" Height="800" Loaded="UserControl_Loaded">
-    <Grid x:Name="mainGrid">
+             d:DesignHeight="450" d:DesignWidth="800" Width="1020" Height="800" Loaded="UserControl_Loaded">
+    <Grid x:Name="mainGrid" Width="1020">
         <TextBlock HorizontalAlignment="Left" Margin="30,10,0,0" TextWrapping="Wrap" Text="Patient ID: " VerticalAlignment="Top"/>
         <TextBlock x:Name="txtBlock_PtId" HorizontalAlignment="Left" Margin="92,10,0,0" TextWrapping="Wrap" Text="{Binding sr_Patient.Id}" VerticalAlignment="Top" Foreground="Black" Background="{DynamicResource {x:Static SystemColors.InactiveCaptionBrushKey}}" Width="94"/>
         <TextBlock HorizontalAlignment="Left" Margin="50,108,0,0" TextWrapping="Wrap" Text="Select Course..." VerticalAlignment="Top" Width="100"/>
@@ -14,8 +14,8 @@
         <ComboBox x:Name="cbCourses1" ItemsSource="{Binding sr_Patient.Courses}" HorizontalAlignment="Left" Height="21" Margin="50,126,0,0" VerticalAlignment="Top" Width="160" SelectedIndex="0" SelectionChanged="cbCourses1_SelectionChanged" IsEditable="True"/>
         <ComboBox x:Name="cbPlans1" HorizontalAlignment="Left" Height="21" Margin="238,126,0,0" VerticalAlignment="Top" Width="185" SelectionChanged="cbPlans1_SelectionChanged"/>
 
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="500" Margin="50,210,0,0" VerticalAlignment="Top" Width="850">
-            <ScrollViewer x:Name="svPlan1" Background="AliceBlue" FontFamily="Calibri" FontSize="14" VerticalScrollBarVisibility="Hidden" Width="850" HorizontalAlignment="Left">
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="500" Margin="50,210,0,0" VerticalAlignment="Top" Width="950">
+            <ScrollViewer x:Name="svPlan1" Background="AliceBlue" FontFamily="Calibri" FontSize="14" VerticalScrollBarVisibility="Hidden" Width="950" HorizontalAlignment="Left" MinWidth="6">
                 <DockPanel Margin="10" >
                     <StackPanel x:Name="panelCompCheckboxes" DockPanel.Dock="Left" Width="24">
                         <Rectangle Height="108" Margin="0,0,4,0" />
@@ -34,22 +34,22 @@
                         </Grid>
                     </StackPanel>
 
-                    <TextBlock DockPanel.Dock="Top" Text="General Plan Information:" FontWeight="Bold" Foreground="Black" Height="32"/>
+                    <TextBlock DockPanel.Dock="Top" Text="General Plan Information:" FontWeight="Bold" Foreground="Black" Height="32" Width="165" HorizontalAlignment="Left"/>
 
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0" Height="24">
-                        <TextBlock Text="Plan 1..." FontWeight="Bold"/>
-                        <TextBlock Text="Plan 2..." FontWeight="Bold" Margin="364,0,0,0"/>
+                        <TextBlock Text="Plan 1..." FontWeight="Bold" Width="50"/>
+                        <TextBlock Text="Plan 2..." FontWeight="Bold" Margin="400,0,0,0"/>
                     </StackPanel>
 
-                    <Border DockPanel.Dock="Top" Margin="0"  BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top" >
-                        <Grid ShowGridLines="False">
+                    <Border DockPanel.Dock="Top" Margin="0"  BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="895" >
+                        <Grid ShowGridLines="False" Width="885" HorizontalAlignment="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="15" />
-                                <ColumnDefinition Width="120" />
-                                <ColumnDefinition Width="260" />
-                                <ColumnDefinition Width="30" />
-                                <ColumnDefinition Width="120" />
-                                <ColumnDefinition Width="260" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="119" />
+                                <ColumnDefinition Width="299" />
+                                <ColumnDefinition Width="29" />
+                                <ColumnDefinition Width="119" />
+                                <ColumnDefinition Width="299" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="24" />
@@ -86,31 +86,32 @@
                             <Rectangle  Grid.Row="5" Grid.Column="3" VerticalAlignment="Stretch" Fill="LightGray" Margin="14,0"/>
                         </Grid>
                     </Border>
-
-                    <TextBlock DockPanel.Dock="Top" Text="Field Information:" FontWeight="Bold" Foreground="Black" Height="24" Margin="0,20,0,0"/>
-                    <Expander x:Name="fieldGridExpander" DockPanel.Dock="Top" Expanded="Expander_Expanded" Collapsed="Expander_Collapsed" />
-                    <Border DockPanel.Dock="Top" Margin="0"  BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top" >
-                        <StackPanel x:Name="fieldGridPanel" Width="805" Orientation="Vertical">
-                            <Grid x:Name="grid_FieldData" ShowGridLines="False">
+                    <TextBlock DockPanel.Dock="Top" Text="Field Information:" FontWeight="Bold" Foreground="Black" Height="24" Margin="0,20,0,0" Width="885" HorizontalAlignment="Left"/>
+                    <Expander x:Name="fieldGridExpander" DockPanel.Dock="Top" Expanded="Expander_Expanded" Collapsed="Expander_Collapsed" HorizontalAlignment="Left" />
+                    <Border DockPanel.Dock="Top" Margin="0"  BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="895" >
+                        <StackPanel x:Name="fieldGridPanel" Orientation="Vertical" Width="885" HorizontalAlignment="Left">
+                            <Grid x:Name="grid_FieldData" ShowGridLines="False" Width="885" HorizontalAlignment="Left">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="15" />
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="50" />
-                                    <ColumnDefinition Width="50" />
-                                    <ColumnDefinition Width="50" />
-                                    <ColumnDefinition Width="40" />
-                                    <ColumnDefinition Width="40" />
-                                    <ColumnDefinition Width="40" />
-                                    <ColumnDefinition Width="40" />
-                                    <ColumnDefinition Width="30" />
-                                    <ColumnDefinition Width="70" />
-                                    <ColumnDefinition Width="50" />
-                                    <ColumnDefinition Width="50" />
-                                    <ColumnDefinition Width="50" />
-                                    <ColumnDefinition Width="40" />
-                                    <ColumnDefinition Width="40" />
-                                    <ColumnDefinition Width="40" />
-                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="12"  />
+                                    <ColumnDefinition Width="69" />
+                                    <ColumnDefinition Width="49"  />
+                                    <ColumnDefinition Width="49" />
+                                    <ColumnDefinition Width="49"  />
+                                    <ColumnDefinition Width="39"  />
+                                    <ColumnDefinition Width="39"  />
+                                    <ColumnDefinition Width="39"  />
+                                    <ColumnDefinition Width="39"  />
+                                    <ColumnDefinition Width="39"  />
+                                    <ColumnDefinition Width="29"  />
+                                    <ColumnDefinition Width="69" />
+                                    <ColumnDefinition Width="49"  />
+                                    <ColumnDefinition Width="49" />
+                                    <ColumnDefinition Width="49"  />
+                                    <ColumnDefinition Width="39"  />
+                                    <ColumnDefinition Width="39"  />
+                                    <ColumnDefinition Width="39" />
+                                    <ColumnDefinition Width="39" />
+                                    <ColumnDefinition Width="39" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="24" />
@@ -125,36 +126,37 @@
                                 <TextBlock Text="X2" Grid.Row="0" Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
                                 <TextBlock Text="Y1" Grid.Row="0" Grid.Column="7" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
                                 <TextBlock Text="Y2" Grid.Row="0" Grid.Column="8" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
+                                <TextBlock Text="MUs" Grid.Row="0" Grid.Column="9" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
 
                                 <Canvas Grid.Row="1" Grid.Column="1" Width="375">
-                                    <Separator ClipToBounds="False" VerticalAlignment="Center" Height="2" Margin="0" Width="375" HorizontalAlignment="Left" />
+                                    <Separator ClipToBounds="False" VerticalAlignment="Center" Height="2" Margin="0" Width="415" HorizontalAlignment="Left" />
                                 </Canvas>
 
-                                <TextBlock Text="Field ID" Grid.Row="0" Grid.Column="10" HorizontalAlignment="Left" VerticalAlignment="Center" Height="16" Margin="0,4" Width="58" FontSize="12" />
-                                <TextBlock Text="Gantry" Grid.Row="0" Grid.Column="11" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" Width="42" FontSize="12" />
-                                <TextBlock Text="Coll." Grid.Row="0" Grid.Column="12" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" Width="42" FontSize="12" />
-                                <TextBlock Text="Table" Grid.Row="0" Grid.Column="13" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" Width="42" FontSize="12" />
-                                <TextBlock Text="X1" Grid.Row="0" Grid.Column="14" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
-                                <TextBlock Text="X2" Grid.Row="0" Grid.Column="15" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
-                                <TextBlock Text="Y1" Grid.Row="0" Grid.Column="16" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
-                                <TextBlock Text="Y2" Grid.Row="0" Grid.Column="17" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
+                                <TextBlock Text="Field ID" Grid.Row="0" Grid.Column="11" HorizontalAlignment="Left" VerticalAlignment="Center" Height="16" Margin="0,4" Width="58" FontSize="12" />
+                                <TextBlock Text="Gantry" Grid.Row="0" Grid.Column="12" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" Width="42" FontSize="12" />
+                                <TextBlock Text="Coll." Grid.Row="0" Grid.Column="13" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" Width="42" FontSize="12" />
+                                <TextBlock Text="Table" Grid.Row="0" Grid.Column="14" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" Width="42" FontSize="12" />
+                                <TextBlock Text="X1" Grid.Row="0" Grid.Column="15" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
+                                <TextBlock Text="X2" Grid.Row="0" Grid.Column="16" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
+                                <TextBlock Text="Y1" Grid.Row="0" Grid.Column="17" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
+                                <TextBlock Text="Y2" Grid.Row="0" Grid.Column="18" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
+                                <TextBlock Text="MUs" Grid.Row="0" Grid.Column="19" HorizontalAlignment="Center" VerticalAlignment="Center" Height="16" Margin="0,4" FontSize="12" />
 
-                                <Canvas Grid.Row="1" Grid.Column="10" Width="375">
-                                    <Separator ClipToBounds="False" VerticalAlignment="Center" Height="2" Margin="0" Width="375" HorizontalAlignment="Left" />
+                                <Canvas Grid.Row="1" Grid.Column="11" Width="375">
+                                    <Separator ClipToBounds="False" VerticalAlignment="Center" Height="2" Margin="0" Width="415" HorizontalAlignment="Left" />
                                 </Canvas>
 
-                                <Rectangle  Grid.Row="0" Grid.Column="9" VerticalAlignment="Stretch" Fill="LightGray" Margin="14,0"/>
-                                <Rectangle  Grid.Row="1" Grid.Column="9" VerticalAlignment="Stretch" Fill="LightGray" Margin="14,0"/>
+                                <Rectangle  Grid.Row="0" Grid.Column="10" VerticalAlignment="Stretch" Fill="LightGray" Margin="13,0" Width="2"/>
+                                <Rectangle  Grid.Row="1" Grid.Column="10" VerticalAlignment="Stretch" Fill="LightGray" Margin="13,0" Width="2"/>
                             </Grid>
                         </StackPanel>
 
                     </Border>
-
                     <Button DockPanel.Dock="Top" Width="200" Height="39" HorizontalAlignment="Left" Margin="0,30,0,10" Content="Load Calc Point..." >
 
                     </Button>
 
-                    <Border DockPanel.Dock="Left"  Margin="0"  BorderBrush="Black" BorderThickness="1" Height="301" HorizontalAlignment="Left" VerticalAlignment="Top" Width="805"  >
+                    <Border DockPanel.Dock="Left"  Margin="0"  BorderBrush="Black" BorderThickness="1" Height="301" HorizontalAlignment="Left" VerticalAlignment="Top" Width="895"  >
                         <StackPanel Height="200" HorizontalAlignment="Left" VerticalAlignment="Top"  Orientation="Horizontal"/>
 
                     </Border>
@@ -173,7 +175,7 @@
         <ComboBox x:Name="cbPlans2" HorizontalAlignment="Left" Height="21" Margin="715,126,0,0" VerticalAlignment="Top" Width="185"/>
         <Button x:Name="btn_LoadPlan2" Content="Load Plan for Comparison..." HorizontalAlignment="Left" Height="29" Margin="715,164,0,0" VerticalAlignment="Top" Width="185" IsDefault="True" Click="btn_LoadPlan2_Click" Foreground="Black" Background="#FFFFE6C8"/>
         <TextBlock HorizontalAlignment="Left" Margin="30,50,0,0" TextWrapping="Wrap" Text="Select Course, then Plan..." VerticalAlignment="Top" FontSize="14" FontWeight="Bold"/>
-        <TextBox x:Name="tbDebug" HorizontalAlignment="Left" Height="70" Margin="483,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="439" Opacity="0.33"/>
+        <TextBox x:Name="tbDebug" HorizontalAlignment="Left" Height="70" Margin="485,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="515" Opacity="0.33"/>
         <Button x:Name="btn_TestRowDelete" Content="Test row deletion" HorizontalAlignment="Left" Height="29" Margin="50,164,0,0" VerticalAlignment="Top" Width="112" Click="btn_TestRowDelete_Click"/>
         <Button HorizontalAlignment="Left" Margin="392,11,0,0" VerticalAlignment="Top" Width="75" Opacity="0.33" Height="69" Click="Button_Click">
             <TextBlock Text="Post Comparison To Debug Window" TextWrapping="Wrap" FontFamily="Calibri" TextAlignment="Center" />

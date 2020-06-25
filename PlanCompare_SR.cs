@@ -31,14 +31,13 @@ namespace VMS.TPS {
             // TODO : Add here the code that is called when the script is launched from Eclipse.
             Run(context.CurrentUser, context.Patient, context.Image, context.StructureSet, context.PlanSetup, context.PlansInScope, context.PlanSumsInScope, mainWindow);
 
-
+            //Code for PlugIn app.  Commented out for ScritpRunner app.
             //mainWindow wnd = new mainWindow();
 
             //wnd.DataContext = context;
             //wnd.theContext = context;
 
             //wnd.ShowDialog();
-            //Test
 
         }
 

@@ -284,7 +284,7 @@ namespace PlanCompare_SR.Views {
                         //Call the Data Manager function that updates the field data.  We send the Grid object and TextBlock list as the targets
                         //of the update.  This way, if we change the interface, we can just send the new targets without re-writing the data manager.
                         ClearFieldTBsForPlan(2);
-                        theDM.SetPlanData(2, this.grid_FieldData, planGenTBs[2], planFieldTBs[2], 9);
+                        theDM.SetPlanData(2, this.grid_FieldData, planGenTBs[2], planFieldTBs[2], 10);
                         UpdateFieldOkayResults();
                     }
                     else {
@@ -335,6 +335,18 @@ namespace PlanCompare_SR.Views {
 
                 //This is just added for debuging purposes.  Okay to delete once this function is validated.
                 //this.tbDebug.AppendText("Rect Name for Field " + i.ToString() + " is: " + newRect.Name + "\r\n");
+            }
+
+            for(int i = 0; i < numOfRows; i++) {
+                //Create a thin rectangle for each grid row, to act as the gray separator in column 10.
+                Rectangle newRect = new Rectangle();
+                newRect.Height = 24;
+                newRect.Width = 2;
+                newRect.Fill = new SolidColorBrush(Color.FromRgb(211, 211, 211));
+                newRect.Margin = new Thickness(13, 0, 13, 0);
+                this.grid_FieldData.Children.Add(newRect);
+                Grid.SetRow(newRect, 2 + i);
+                Grid.SetColumn(newRect, 10);
             }
         }
 

@@ -172,22 +172,27 @@ namespace PlanCompare_SR {
 
                         newTB = new TextBlock();
                         newTB.Text = curBeam.ControlPoints[0].JawPositions.X1.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 50, 2 + i, gridColOffset + 5);
+                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 5);
                         fldTextBlockList.Add(newTB);
 
                         newTB = new TextBlock();
                         newTB.Text = curBeam.ControlPoints[0].JawPositions.X2.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 50, 2 + i, gridColOffset + 6);
+                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 6);
                         fldTextBlockList.Add(newTB);
 
                         newTB = new TextBlock();
                         newTB.Text = curBeam.ControlPoints[0].JawPositions.Y1.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 50, 2 + i, gridColOffset + 7);
+                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 7);
                         fldTextBlockList.Add(newTB);
 
                         newTB = new TextBlock();
                         newTB.Text = curBeam.ControlPoints[0].JawPositions.Y2.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 50, 2 + i, gridColOffset + 8);
+                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 8);
+                        fldTextBlockList.Add(newTB);
+
+                        newTB = new TextBlock();
+                        newTB.Text = string.Format("{0:0.0}", curBeam.Meterset.Value);
+                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 9);
                         fldTextBlockList.Add(newTB);
                     }
 
