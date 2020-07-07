@@ -5,23 +5,25 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PlanCompare_SR.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800" Width="1020" Height="800" Loaded="UserControl_Loaded">
-    <Grid x:Name="mainGrid" Width="1020">
+             d:DesignHeight="450" d:DesignWidth="800" Width="1040" Height="800" Loaded="UserControl_Loaded" HorizontalAlignment="Left">
+    <Grid x:Name="mainGrid" Width="1040" HorizontalAlignment="Left">
         <TextBlock HorizontalAlignment="Left" Margin="30,10,0,0" TextWrapping="Wrap" Text="Patient ID: " VerticalAlignment="Top"/>
         <TextBlock x:Name="txtBlock_PtId" HorizontalAlignment="Left" Margin="92,10,0,0" TextWrapping="Wrap" Text="{Binding sr_Patient.Id}" VerticalAlignment="Top" Foreground="Black" Background="{DynamicResource {x:Static SystemColors.InactiveCaptionBrushKey}}" Width="94"/>
         <TextBlock HorizontalAlignment="Left" Margin="50,108,0,0" TextWrapping="Wrap" Text="Select Course..." VerticalAlignment="Top" Width="100"/>
-        <TextBlock HorizontalAlignment="Left" Margin="238,108,0,0" TextWrapping="Wrap" Text="Select Plan..." VerticalAlignment="Top" Width="100"/>
-        <ComboBox x:Name="cbCourses1" ItemsSource="{Binding sr_Patient.Courses}" HorizontalAlignment="Left" Height="21" Margin="50,126,0,0" VerticalAlignment="Top" Width="160" SelectedIndex="0" SelectionChanged="cbCourses1_SelectionChanged" IsEditable="True"/>
-        <ComboBox x:Name="cbPlans1" HorizontalAlignment="Left" Height="21" Margin="238,126,0,0" VerticalAlignment="Top" Width="185" SelectionChanged="cbPlans1_SelectionChanged"/>
+        <TextBlock HorizontalAlignment="Left" Margin="225,108,0,0" TextWrapping="Wrap" Text="Select Plan..." VerticalAlignment="Top" Width="100"/>
+        <ComboBox x:Name="cbCourses1" ItemsSource="{Binding sr_Patient.Courses}" HorizontalAlignment="Left" Height="21" Margin="50,126,0,0" VerticalAlignment="Top" Width="150" SelectedIndex="0" SelectionChanged="cbCourses1_SelectionChanged" IsEditable="True"/>
+        <ComboBox x:Name="cbPlans1" HorizontalAlignment="Left" Height="21" Margin="225,126,0,0" VerticalAlignment="Top" Width="150" SelectionChanged="cbPlans1_SelectionChanged"/>
 
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="500" Margin="50,210,0,0" VerticalAlignment="Top" Width="950">
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="530" Margin="50,180,0,0" VerticalAlignment="Top" Width="950">
             <ScrollViewer x:Name="svPlan1" Background="AliceBlue" FontFamily="Calibri" FontSize="14" VerticalScrollBarVisibility="Hidden" Width="950" HorizontalAlignment="Left" MinWidth="6">
                 <DockPanel Margin="10" >
                     <StackPanel x:Name="panelCompCheckboxes" DockPanel.Dock="Left" Width="24">
                         <Rectangle Height="108" Margin="0,0,4,0" />
-                        <Rectangle x:Name="compNumOfFields" Height="20" Fill="Lime" Margin="0,0,4,0" />
-                        <Rectangle Height="44" Margin="0,0,4,0" />
-                        <Rectangle x:Name="all_flds_okay" Height="20" Fill="Lime" Margin="0,0,4,0" />
+                        <Rectangle x:Name="compNumOfFields" Height="22" Fill="Lime" Margin="0,0,4,0" />
+                        <Rectangle Height="22" Margin="0,0,4,0" />
+                        <Rectangle x:Name="compFx" Height="22" Fill="Lime" Margin="0,0,4,0" />
+                        <Rectangle Height="22" Margin="0,0,4,0" />
+                        <Rectangle x:Name="comp_all_flds_okay" Height="22" Fill="Lime" Margin="0,0,4,0" />
                         <Rectangle Height="30" Margin="0,0,4,0" />
                         <Grid x:Name="grid_FieldsOkay">
                             <Grid.ColumnDefinitions>
@@ -44,14 +46,15 @@
                     <Border DockPanel.Dock="Top" Margin="0"  BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="895" >
                         <Grid ShowGridLines="False" Width="885" HorizontalAlignment="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="12" />
-                                <ColumnDefinition Width="119" />
-                                <ColumnDefinition Width="299" />
-                                <ColumnDefinition Width="29" />
-                                <ColumnDefinition Width="119" />
-                                <ColumnDefinition Width="299" />
+                                <ColumnDefinition Width="15" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="300" />
+                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="300" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="24" />
                                 <RowDefinition Height="24" />
                                 <RowDefinition Height="24" />
                                 <RowDefinition Height="24" />
@@ -62,21 +65,33 @@
                             <TextBlock Text="Plan ID:" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="44" />
                             <TextBlock Text="Number of Fields:" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" />
                             <TextBlock Text="Algorithm:" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="101" />
+                            <TextBlock Text="Fractionation:" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="101" />
 
                             <TextBlock x:Name="grid_tb_CourseId1" Text="" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
                             <TextBlock x:Name="grid_tb_PlanId1" Text="" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
                             <TextBlock x:Name="grid_tb_NoOfF1" Text="" Grid.Row="2" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
                             <TextBlock x:Name="grid_tb_Alg1" Text="" Grid.Row="3" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
+                            <TextBlock x:Name="grid_tb_Fx1d" Text="" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="80" Grid.ColumnSpan="2" />
+                            <TextBlock Text=" x " Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" Height="17" Margin="80,4,0,4" Width="20" Grid.ColumnSpan="2" HorizontalAlignment="Left" TextAlignment="Center" />
+                            <TextBlock x:Name="grid_tb_Fx1f" Text="" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="100,4,0,4" Width="40" Grid.ColumnSpan="2" TextAlignment="Center" />
+                            <TextBlock Text=" = " Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" Height="17" Margin="140,4,0,4" Width="20" Grid.ColumnSpan="2" HorizontalAlignment="Left" TextAlignment="Center" />
+                            <TextBlock x:Name="grid_tb_Fx1t" Text="" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="160,4,0,4" Width="80" Grid.ColumnSpan="2" TextAlignment="Center" />
 
                             <TextBlock Text="Course ID:" Grid.Row="0" Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="58" />
                             <TextBlock Text="Plan ID:" Grid.Row="1" Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="44" />
                             <TextBlock Text="Number of Fields:" Grid.Row="2" Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" />
                             <TextBlock Text="Algorithm:" Grid.Row="3" Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="101" />
+                            <TextBlock Text="Frationation:" Grid.Row="4" Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="101" />
 
-                            <TextBlock x:Name="grid_tb_CourseId2" Text="" Grid.Row="0" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
+                            <TextBlock x:Name="grid_tb_CourseId2" Text="" Grid.Row="0" Grid.Column="5" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" HorizontalAlignment="Left" />
                             <TextBlock x:Name="grid_tb_PlanId2" Text="" Grid.Row="1" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
                             <TextBlock x:Name="grid_tb_NoOfF2" Text="" Grid.Row="2" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
                             <TextBlock x:Name="grid_tb_Alg2" Text="" Grid.Row="3" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="240" Grid.ColumnSpan="2" />
+                            <TextBlock x:Name="grid_tb_Fx2d" Text="" Grid.Row="4" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="0,4" Width="80" Grid.ColumnSpan="2" />
+                            <TextBlock Text=" x " Grid.Row="4" Grid.Column="5" VerticalAlignment="Center" Height="17" Margin="80,4,0,4" Width="20" HorizontalAlignment="Left" Grid.ColumnSpan="2" TextAlignment="Center" />
+                            <TextBlock x:Name="grid_tb_Fx2f" Text="" Grid.Row="4" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="100,4,0,4" Width="40" Grid.ColumnSpan="2" TextAlignment="Center" />
+                            <TextBlock Text=" = " Grid.Row="4" Grid.Column="5" VerticalAlignment="Center" Height="17" Margin="140,4,0,4" Width="20" Grid.ColumnSpan="2" HorizontalAlignment="Left" TextAlignment="Center" />
+                            <TextBlock x:Name="grid_tb_Fx2t" Text="" Grid.Row="4" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Center" Height="17" Margin="160,4,0,4" Width="80" Grid.ColumnSpan="2" TextAlignment="Center" />
 
                             <Rectangle  Grid.Row="0" Grid.Column="3" VerticalAlignment="Stretch" Fill="LightGray" Margin="14,0"/>
                             <Rectangle  Grid.Row="1" Grid.Column="3" VerticalAlignment="Stretch" Fill="LightGray" Margin="14,0"/>
@@ -92,26 +107,26 @@
                         <StackPanel x:Name="fieldGridPanel" Orientation="Vertical" Width="885" HorizontalAlignment="Left">
                             <Grid x:Name="grid_FieldData" ShowGridLines="False" Width="885" HorizontalAlignment="Left">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="12"  />
-                                    <ColumnDefinition Width="69" />
-                                    <ColumnDefinition Width="49"  />
-                                    <ColumnDefinition Width="49" />
-                                    <ColumnDefinition Width="49"  />
-                                    <ColumnDefinition Width="39"  />
-                                    <ColumnDefinition Width="39"  />
-                                    <ColumnDefinition Width="39"  />
-                                    <ColumnDefinition Width="39"  />
-                                    <ColumnDefinition Width="39"  />
-                                    <ColumnDefinition Width="29"  />
-                                    <ColumnDefinition Width="69" />
-                                    <ColumnDefinition Width="49"  />
-                                    <ColumnDefinition Width="49" />
-                                    <ColumnDefinition Width="49"  />
-                                    <ColumnDefinition Width="39"  />
-                                    <ColumnDefinition Width="39"  />
-                                    <ColumnDefinition Width="39" />
-                                    <ColumnDefinition Width="39" />
-                                    <ColumnDefinition Width="39" />
+                                    <ColumnDefinition Width="15"  />
+                                    <ColumnDefinition Width="70" />
+                                    <ColumnDefinition Width="50"  />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="50"  />
+                                    <ColumnDefinition Width="40"  />
+                                    <ColumnDefinition Width="40"  />
+                                    <ColumnDefinition Width="40"  />
+                                    <ColumnDefinition Width="40"  />
+                                    <ColumnDefinition Width="40"  />
+                                    <ColumnDefinition Width="30"  />
+                                    <ColumnDefinition Width="70" />
+                                    <ColumnDefinition Width="50"  />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="50"  />
+                                    <ColumnDefinition Width="40"  />
+                                    <ColumnDefinition Width="40"  />
+                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="40" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="24" />
@@ -166,17 +181,19 @@
         </Border>
 
 
-        <ScrollBar x:Name="sbPlanCompare" HorizontalAlignment="Left" Height="500" Margin="10,210,0,0" VerticalAlignment="Top" Width="29" Maximum="100" Scroll="ScrollBar_Scroll" SmallChange="16" LargeChange="64"/>
+        <ScrollBar x:Name="sbPlanCompare" HorizontalAlignment="Left" Height="530" Margin="10,180,0,0" VerticalAlignment="Top" Width="29" Maximum="100" Scroll="ScrollBar_Scroll" SmallChange="16" LargeChange="64"/>
         <TextBlock HorizontalAlignment="Left" Margin="50,88,0,0" TextWrapping="Wrap" Text="Plan 1..." VerticalAlignment="Top" FontWeight="Bold" TextDecorations="Underline"/>
-        <TextBlock HorizontalAlignment="Left" Margin="526,85,0,0" TextWrapping="Wrap" Text="Plan 2..." VerticalAlignment="Top" FontWeight="Bold" TextDecorations="Underline"/>
-        <TextBlock HorizontalAlignment="Left" Margin="526,108,0,0" TextWrapping="Wrap" Text="Select Course..." VerticalAlignment="Top" Width="100"/>
-        <ComboBox x:Name="cbCourses2" ItemsSource="{Binding sr_Patient.Courses}" HorizontalAlignment="Left" Height="21" Margin="526,126,0,0" VerticalAlignment="Top" Width="160" SelectedIndex="0" IsEditable="True" SelectionChanged="cbCourses2_SelectionChanged"/>
+        <TextBlock HorizontalAlignment="Left" Margin="540,85,0,0" TextWrapping="Wrap" Text="Plan 2..." VerticalAlignment="Top" FontWeight="Bold" TextDecorations="Underline"/>
+        <TextBlock HorizontalAlignment="Left" Margin="540,108,0,0" TextWrapping="Wrap" Text="Select Course..." VerticalAlignment="Top" Width="100"/>
+        <ComboBox x:Name="cbCourses2" ItemsSource="{Binding sr_Patient.Courses}" HorizontalAlignment="Left" Height="21" Margin="540,126,0,0" VerticalAlignment="Top" Width="150" SelectedIndex="0" IsEditable="True" SelectionChanged="cbCourses2_SelectionChanged"/>
         <TextBlock HorizontalAlignment="Left" Margin="715,108,0,0" TextWrapping="Wrap" Text="Select Plan..." VerticalAlignment="Top" Width="100"/>
-        <ComboBox x:Name="cbPlans2" HorizontalAlignment="Left" Height="21" Margin="715,126,0,0" VerticalAlignment="Top" Width="185"/>
-        <Button x:Name="btn_LoadPlan2" Content="Load Plan for Comparison..." HorizontalAlignment="Left" Height="29" Margin="715,164,0,0" VerticalAlignment="Top" Width="185" IsDefault="True" Click="btn_LoadPlan2_Click" Foreground="Black" Background="#FFFFE6C8"/>
-        <TextBlock HorizontalAlignment="Left" Margin="30,50,0,0" TextWrapping="Wrap" Text="Select Course, then Plan..." VerticalAlignment="Top" FontSize="14" FontWeight="Bold"/>
+        <ComboBox x:Name="cbPlans2" HorizontalAlignment="Left" Height="21" Margin="715,126,0,0" VerticalAlignment="Top" Width="150"/>
+        <Button x:Name="btn_LoadPlan2"  HorizontalAlignment="Left" Height="38" Margin="890,126,0,0" VerticalAlignment="Top" Width="110" IsDefault="True" Click="btn_LoadPlan2_Click" Foreground="Black" Background="#FFFFE6C8">
+            <TextBlock Text="Load Plan for Comparison..." TextWrapping="Wrap" FontFamily="Calibri" TextAlignment="Center" />
+        </Button>
+        <TextBlock HorizontalAlignment="Left" Margin="30,50,0,0" TextWrapping="Wrap" Text="Select Course and Plan..." VerticalAlignment="Top" FontSize="14" FontWeight="Bold"/>
         <TextBox x:Name="tbDebug" HorizontalAlignment="Left" Height="70" Margin="485,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="515" Opacity="0.33"/>
-        <Button x:Name="btn_TestRowDelete" Content="Test row deletion" HorizontalAlignment="Left" Height="29" Margin="50,164,0,0" VerticalAlignment="Top" Width="112" Click="btn_TestRowDelete_Click"/>
+        <Button x:Name="btn_TestRowDelete" Content="Test row deletion" HorizontalAlignment="Left" Height="29" Margin="50,164,0,0" VerticalAlignment="Top" Width="112" Click="btn_TestRowDelete_Click" Visibility="Hidden"/>
         <Button HorizontalAlignment="Left" Margin="392,11,0,0" VerticalAlignment="Top" Width="75" Opacity="0.33" Height="69" Click="Button_Click">
             <TextBlock Text="Post Comparison To Debug Window" TextWrapping="Wrap" FontFamily="Calibri" TextAlignment="Center" />
         </Button>

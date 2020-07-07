@@ -16,6 +16,7 @@ using PlanCompare_SR;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 
+
 namespace PlanCompare_SR.Views {
     /// <summary>
     /// Interaction logic for mainWindowContents.xaml
@@ -23,6 +24,10 @@ namespace PlanCompare_SR.Views {
     public partial class mainWindowContents : UserControl {
         //public ScriptContext theContext;
         public DataManager theDM;
+
+        //USED for ScriptRunner app only... create placeholders for the current course and current plan index.
+        int curCourseIdx;
+        int curPlanIdx;
 
 
         //Create arrays of lists of TextBlock objects.  These will hold the TextBlock controls for the plan information
@@ -52,7 +57,7 @@ namespace PlanCompare_SR.Views {
             //Added just for ScriptRunner.  Sets the mainWindowContents datacontext to be the data manager.
             //For the PlugIn app, the data context is the Script Context, and isn't set here, so remove for PlugIn app.
             //REMOVE FOR PLUGIN APP
-            this.DataContext = theDM;
+                this.DataContext = theDM;
             //REMOVE FOR PLUGIN APP
 
             //Initialize our lists of plan general info TextBlocks for easy updating of plan info later.
@@ -64,12 +69,18 @@ namespace PlanCompare_SR.Views {
             planGenTBs[1].Add(this.grid_tb_PlanId1);
             planGenTBs[1].Add(this.grid_tb_NoOfF1);
             planGenTBs[1].Add(this.grid_tb_Alg1);
+            planGenTBs[1].Add(this.grid_tb_Fx1d);
+            planGenTBs[1].Add(this.grid_tb_Fx1f);
+            planGenTBs[1].Add(this.grid_tb_Fx1t);
 
             planGenTBs[2] = new List<TextBlock>();
             planGenTBs[2].Add(this.grid_tb_CourseId2);
             planGenTBs[2].Add(this.grid_tb_PlanId2);
             planGenTBs[2].Add(this.grid_tb_NoOfF2);
             planGenTBs[2].Add(this.grid_tb_Alg2);
+            planGenTBs[2].Add(this.grid_tb_Fx2d);
+            planGenTBs[2].Add(this.grid_tb_Fx2f);
+            planGenTBs[2].Add(this.grid_tb_Fx2t);
 
             planFieldTBs[0] = null;
             planFieldTBs[1] = new List<TextBlock>();
@@ -77,16 +88,42 @@ namespace PlanCompare_SR.Views {
 
             //Add the general results rectangles to the list of general results markers.  Add the All-Fields result first,
             //so that it is always item 0, and thus we will always know where to find it.
-            rectsGen.Add(this.all_flds_okay);
+            rectsGen.Add(this.comp_all_flds_okay);
             rectsGen.Add(this.compNumOfFields);
+            rectsGen.Add(this.compFx);
 
             theDM.debugTB = this.tbDebug;
 
             //Initialize the temporary data objects used by ScriptRunner.  Remove when changed back to PlugIn.
             //REMOVE BELOW FOR PLUGIN APP
-            theDM.sr_Patient = thePatient;
-            theDM.sr_PlanSetup = thePlanSetup;
+                theDM.sr_Patient = thePatient;
+                theDM.sr_PlanSetup = thePlanSetup;
             //REMOVE ABOVE FOR PLUGIN APP
+
+
+            //Code added just for ScriptRunner, to set the initial course and plan
+            this.cbCourses1.SelectedIndex = -1;
+            this.cbPlans1.SelectedIndex = -1;
+
+            int cnt = theDM.sr_Patient.Courses.Count();
+            int foundCourseAt = 0;
+            for (int i = 0; i < cnt; i++) {
+                if (theDM.sr_Patient.Courses.ElementAt(i).Id == theDM.sr_PlanSetup.Course.Id) {
+                    foundCourseAt = i;
+                    break;
+                }
+            }
+
+            cnt = theDM.sr_Patient.Courses.ElementAt(foundCourseAt).PlanSetups.Count();
+            int foundPlanAt = 0;
+            for (int i = 0; i < cnt; i++) {
+                if (theDM.sr_Patient.Courses.ElementAt(foundCourseAt).PlanSetups.ElementAt(i).Id == theDM.sr_PlanSetup.Id) {
+                    foundPlanAt = i;
+                    break;
+                }
+            }
+            curCourseIdx = foundCourseAt;
+            curPlanIdx = foundPlanAt;
         }
 
 
@@ -127,54 +164,30 @@ namespace PlanCompare_SR.Views {
 
         //This function used for ScriptRunner only.  Remove for PlugIn app.
         //REMOVE BELOW FOR PLUGIN APP
-        private void UserControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            //MessageBox.Show("Made it this far... UserControl_Loaded.");
-            this.sbPlanCompare.Maximum = (this.svPlan1.ExtentHeight - this.svPlan1.ActualHeight);
+            private void UserControl_Loaded(object sender, RoutedEventArgs e)
+            {
+                this.sbPlanCompare.Maximum = (this.svPlan1.ExtentHeight - this.svPlan1.ActualHeight);
 
-            //Code to initialize the Course and Plan drop-downs... if needed.
+                //Code to initialize the Course and Plan drop-downs... if needed.
 
-            //Code added just for ScriptRunner, to set the initial course and plan
-            int cnt = theDM.sr_Patient.Courses.Count();
-            int foundCourseAt = 0;
-            for (int i = 0; i < cnt; i++) {
-                if (theDM.sr_Patient.Courses.ElementAt(i).Id == theDM.sr_PlanSetup.Course.Id) {
-                    //MessageBox.Show("Found current course... equals: " + theDM.sr_Patient.Courses.ElementAt(i).Id);
-                    foundCourseAt = i;
-                    break;
-                }
+                this.cbCourses1.SelectedIndex = curCourseIdx;
+                this.cbPlans1.SelectedIndex = curPlanIdx;
+
+                //Set the second course combobox to match the first course combobox
+                this.cbCourses2.SelectedIndex = this.cbCourses1.SelectedIndex;
+
+                //Set the plan2 combobox to blank.  Set the plan1 combobox to the first item in it's list.
+                //NOTE:  seting the SelectedIndex for any of these combobox controls fires their SelectionChanged events.
+                this.cbPlans2.SelectedIndex = -1;  // would fire cbPlans2_SelectionChanged, but we have left that blank for now.
+
+                //Set the initial two rows of the field data grid to height 0.  These rows are the header, and gray separator bar.
+                this.grid_FieldData.RowDefinitions[0].Height = new GridLength(0);
+                this.grid_FieldData.RowDefinitions[1].Height = new GridLength(0);
+
+                //Set the initial two rows of the field okay grid to height 0.  These rows are both blank.
+                this.grid_FieldsOkay.RowDefinitions[0].Height = new GridLength(0);
+                this.grid_FieldsOkay.RowDefinitions[1].Height = new GridLength(0);
             }
-            this.cbCourses1.SelectedIndex = foundCourseAt;
-
-            cnt = theDM.sr_Patient.Courses.ElementAt(foundCourseAt).PlanSetups.Count();
-            int foundPlanAt = 0;
-            for (int i = 0; i < cnt; i++) {
-                if (theDM.sr_Patient.Courses.ElementAt(foundCourseAt).PlanSetups.ElementAt(i).Id == theDM.sr_PlanSetup.Id) {
-                    //MessageBox.Show("Found current course... equals: " + theDM.sr_Patient.Courses.ElementAt(i).Id);
-                    foundPlanAt = i;
-                    break;
-                }
-            }
-            this.cbPlans1.SelectedIndex = foundPlanAt;
-
-
-            //Set the second course combobox to match the first course combobox
-            this.cbCourses2.SelectedIndex = this.cbCourses1.SelectedIndex;
-
-            //Set the plan2 combobox to blank.  Set the plan1 combobox to the first item in it's list.
-            //NOTE:  seting the SelectedIndex for any of these combobox controls fires their SelectionChanged events.
-            this.cbPlans2.SelectedIndex = -1;  // would fire cbPlans2_SelectionChanged, but we have left that blank for now.
-            //uncomment out next line for PlugIn version.
-            //this.cbPlans1.SelectedIndex = 0;  //immediately fires cbPlans1_SelectionChanged
-
-            //Set the initial two rows of the field data grid to height 0.  These rows are the header, and gray separator bar.
-            this.grid_FieldData.RowDefinitions[0].Height = new GridLength(0);
-            this.grid_FieldData.RowDefinitions[1].Height = new GridLength(0);
-
-            //Set the initial two rows of the field okay grid to height 0.  These rows are both blank.
-            this.grid_FieldsOkay.RowDefinitions[0].Height = new GridLength(0);
-            this.grid_FieldsOkay.RowDefinitions[1].Height = new GridLength(0);
-        }
         //REMOVE ABOVE FOR PLUGIN APP
 
 
@@ -186,7 +199,6 @@ namespace PlanCompare_SR.Views {
                 if ((this.cbCourses1.SelectedItem as Course) != null) {
                     this.cbPlans1.SelectedIndex = -1;
                     this.cbPlans1.ItemsSource = (this.cbCourses1.SelectedItem as Course).PlanSetups;
-                    this.cbPlans1.SelectedIndex = 0;
 
                     //Also, assume that if the first plan is changed, then the user will want to select a different course 2 and
                     //plan 2, so set both of those comboboxes to -1 as well.  Set the Course 2 combobox to match the Course 1 combobox.
@@ -227,7 +239,7 @@ namespace PlanCompare_SR.Views {
                     theDM.thePlans[1] = (this.cbPlans1.SelectedItem as PlanSetup);
                     theDM.theCourses[1] = (this.cbCourses1.SelectedItem as Course);
 
-                    //Since the selected plan has changed, clear all plan data,  the field data grid, and the field okay grid, to allow for
+                    //Since the selected plan has changed, clear all plan data, the field data grid, and the field okay grid, to allow for
                     //adding new rows for the new plan fields.
                     theDM.ClearPlanData(1);
 
@@ -242,7 +254,10 @@ namespace PlanCompare_SR.Views {
                     theDM.SetPlanData(1, this.grid_FieldData, planGenTBs[1], planFieldTBs[1], 0);
 
                     //Lastly, since we changed plan 1, assume that we will need a different plan 2, so clear all of the old plan 2 data.
-
+                    this.cbPlans2.SelectedIndex = -1;
+                    ClearTBsForPlan(2);
+                    ResetComparisonBoxes();
+                    theDM.ClearPlanData(2);
 
                 }
                 else {
@@ -253,6 +268,7 @@ namespace PlanCompare_SR.Views {
                 //If plan1 selected index = -1, then no plan is selected.  Check to see if there are field data grid rows.
                 //If there are, then remove them.  Also, send the ClearPlanData command to the Data Manager.
                 if (this.grid_FieldData.RowDefinitions.Count > 2) {
+                    ResetComparisonBoxes();
                     theDM.ClearPlanData(1);
                     RemoveFieldGridRows();
                 }
@@ -283,7 +299,8 @@ namespace PlanCompare_SR.Views {
 
                         //Call the Data Manager function that updates the field data.  We send the Grid object and TextBlock list as the targets
                         //of the update.  This way, if we change the interface, we can just send the new targets without re-writing the data manager.
-                        ClearFieldTBsForPlan(2);
+                        ClearTBsForPlan(2);
+                        ResetComparisonBoxes();
                         theDM.SetPlanData(2, this.grid_FieldData, planGenTBs[2], planFieldTBs[2], 10);
                         UpdateFieldOkayResults();
                     }
@@ -292,7 +309,8 @@ namespace PlanCompare_SR.Views {
                     }
                 }
                 else {
-                    ClearFieldTBsForPlan(2);
+                    ClearTBsForPlan(2);
+                    ResetComparisonBoxes();
                     theDM.ClearPlanData(2);
                 }
             }
@@ -391,42 +409,91 @@ namespace PlanCompare_SR.Views {
 
 
         //Deletes all the TextBlock controls in the field data grid that are associated with the plan.
-        public void ClearFieldTBsForPlan(int planNum)
+        public void ClearTBsForPlan(int planNum)
         {
-            int cnt = planFieldTBs[planNum].Count();
+            //Set the text for the general TextBlocks to be blank ("").
+            int cnt = planGenTBs[planNum].Count();
+            for (int i = 0; i < cnt; i++) {
+                planGenTBs[planNum][i].Text = "";
+            }
 
+            cnt = planFieldTBs[planNum].Count();
             for (int i = cnt - 1; i >= 0; i--) {
                 this.grid_FieldData.Children.Remove(planFieldTBs[planNum][i]);
             }
-
             planFieldTBs[planNum].Clear();
+
             this.grid_FieldData.UpdateLayout();
         }
 
 
+        //Sets all the plan comparison result boxes to be green
+        public void ResetComparisonBoxes()
+        {
+            foreach (Rectangle aRect in rectsGen) {
+                aRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+            }
+
+            foreach (Rectangle aRect in rectsField) {
+                aRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+            }
+        }
+
+
+        //Sets the color of the general and field comparison results boxes... currently just a green or red rectangle.
+        //For the general info markers, some of these markers consolidate more than 1 data point (such as the fractionation results) 
+        //where each data point is checked separately.  So, before we set the result marker, we first check to see if it's already red, 
+        //and only allow it to be set to green if it's not already red.
         public void UpdateFieldOkayResults()
         {
-            int cntGen = theDM.planCompareResults.clGenResults.Count();
-            int cntFld = theDM.planCompareResults.clFieldResults.Count();
+            //int cntGen = theDM.planCompareResults.clGenResults.Count();
+            int cntGen = theDM.clGeneral.count;
+            int cntFld = theDM.clFields.Count();
 
+            //iterate through the general comparison list, setting the result boxes to red or green appropriately
             for (int i = 0; i < cntGen; i++) {
-                if (theDM.planCompareResults.clGenResults[i] == true) {
-                    rectsGen[i].Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+                bool isNotRed = ((SolidColorBrush)rectsGen[i].Fill).Color.R == 0;
+
+                if ( (theDM.clGeneral.resultList[i].result == true) && isNotRed ) {
+                    Rectangle theRect = (Rectangle)GetControlByName(this.panelCompCheckboxes, theDM.clGeneral.resultList[i].cbName);
+                    theRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
                 }
                 else {
-                    rectsGen[i].Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0));
+                    Rectangle theRect = (Rectangle)GetControlByName(this.panelCompCheckboxes, theDM.clGeneral.resultList[i].cbName);
+                    theRect.Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0));
                 }
             }
 
+            //iterate through the list of field comparison lists, setting the result boxes to red or green appropriately
             for (int i = 0; i < cntFld; i++) {
-                if (theDM.planCompareResults.clFieldResults[i] == true) {
-                    rectsField[i].Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
-                }
-                else {
-                    rectsField[i].Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0));
-                }
+                int cntFldItems = theDM.clFields[i].count;
+                for (int j = 0; j < cntFldItems; j++) {
+
+                    if (theDM.clFields[i].total_bool == true) {
+                        Rectangle theRect = (Rectangle)GetControlByName(this.grid_FieldsOkay, theDM.clFields[i].resultList[j].cbName);
+                        theRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+                    }
+                    else {
+                        Rectangle theRect = (Rectangle)GetControlByName(this.grid_FieldsOkay, theDM.clFields[i].resultList[j].cbName);
+                        theRect.Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0)); 
+                    }
+                }  
             }
             this.UpdateLayout();
+        }
+
+
+        //A utility function to return the child control contained in the panel (passed as parameter 1) given the child control's name (parameter 2).
+        //Returns null if not found.
+        public FrameworkElement GetControlByName(Panel aContainer, string objName)
+        {
+            int i = 0;
+            foreach (FrameworkElement winControl in aContainer.Children) {
+                if (winControl.Name == objName) {
+                    return winControl;
+                }
+            }
+            return null;
         }
 
 
@@ -442,8 +509,6 @@ namespace PlanCompare_SR.Views {
                 this.grid_FieldData.RowDefinitions[2 + i].Height = new GridLength(24);
                 this.grid_FieldsOkay.RowDefinitions[1 + i].Height = new GridLength(24);
             }
-
-            //Check_Comparison();
         }
 
 
@@ -469,21 +534,27 @@ namespace PlanCompare_SR.Views {
 
         public void PostComparisonToDebug()
         {
-            int cntGen = theDM.planCompareResults.clGenResults.Count();
-            int cntFld = theDM.planCompareResults.clFieldResults.Count();
+            int cntGen = theDM.clGeneral.count;
+            int cntFld = theDM.clFields.Count();
 
             for (int i = 0; i < cntGen; i++) {
-                this.tbDebug.AppendText("General comparison results for item " + i.ToString() + " is: " + theDM.planCompareResults.clGenResults[i].ToString() + "\r\n");
+                this.tbDebug.AppendText("General comparison results for item " + i.ToString() + " is: " + theDM.clGeneral.resultList[i].result.ToString() + "\r\n");
             }
             for (int i = 0; i < cntFld; i++) {
-                this.tbDebug.AppendText("Field comparison results for item " + i.ToString() + " is: " + theDM.planCompareResults.clFieldResults[i].ToString() + "\r\n");
+                int cntFldItems = theDM.clFields[i].count;
+                for (int j = 0; j < cntFldItems; j++) {
+                    this.tbDebug.AppendText("Field comparison results for item " + i.ToString() + " is: " + theDM.clFields[i].resultList[j].result.ToString() + "\r\n");
+                }
             }
         }
+
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             PostComparisonToDebug();
         }
+
+
 
     }
 }
