@@ -1,49 +1,127 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 
-namespace PlanCompare_SR {
-    public class DataManager {
+
+namespace PlanCompare_SR_DB {
+    public class DataManager : INotifyPropertyChanged {
 
         //The overall data items for storing the plan data.  Setup as arrays, ignoring the zero index, so we can refer to plans
         //using index 1 and 2.
-        public Course[] theCourses = new Course[3];
-        public PlanSetup[] thePlans = new PlanSetup[3];
+
+        public class MyCourseCollection : ObservableCollection<Course> {
+            public DataManager parent { get; set; }
+
+            protected override void SetItem(int index, Course item)
+            {
+                base.SetItem(index, item);
+                if(item != null && parent != null) { 
+                    parent.courseIDs[index] = item.Id.ToString(); 
+                }
+            }
+        }
+
+        private MyCourseCollection _theCourses;
+        public MyCourseCollection theCourses {
+            get { return _theCourses; }
+            set {
+                if (_theCourses != value) {
+                    _theCourses = value;
+                    _theCourses.parent = this;
+                    NotifyPropertyChanged(nameof(theCourses));
+                }
+            }
+        }
+
+        private ObservableCollection<string> _courseIDs;
+        public ObservableCollection<string> courseIDs {
+            get { return _courseIDs; }
+            set {
+                if (_courseIDs != value) {
+                    _courseIDs = value;
+                    NotifyPropertyChanged(nameof(courseIDs));
+                }
+            }
+        }
+
+
+        private PlanData[] _thePlans;
+        public PlanData[] thePlans {
+            get { return _thePlans; }
+            set {
+                if(_thePlans != value) {
+                    
+                    if( _thePlans != null) {
+                        for (int i = 0; i < _thePlans.Length; i++) {
+                            if(_thePlans[i] != null) { _thePlans[i].PropertyChanged -= ChildPropertyChanged; }
+                        }
+                    }
+
+                    _thePlans = value;
+
+                    if (_thePlans != null) {
+                        for (int i = 0; i < _thePlans.Length; i++) {
+                            if (_thePlans[i] != null) { _thePlans[i].PropertyChanged += ChildPropertyChanged; }
+                        }
+                    }
+
+                    NotifyPropertyChanged("thePlans");
+                }
+
+                void ChildPropertyChanged(object sender, PropertyChangedEventArgs args)
+                {
+                    NotifyPropertyChanged("");
+                }
+            }
+        }
 
 
         //Properties to hold data objects for artificial context for ScriptRunner.  Not needed for PlugIn version.
         //Will need to add 'sr_' to data bindings in the main window xaml code.
         //REMOVE BELOW FOR PLUGIN APP
-            private Patient _sr_Patient;
-            public Patient sr_Patient {
-                get { return this._sr_Patient; }
-                set {
-                    if (this._sr_Patient != value) {
-                        this._sr_Patient = value;
-                        this.NotifyPropertyChanged( nameof(sr_Patient) );
-                    }
+        private Patient _sr_Patient;
+        public Patient sr_Patient {
+            get { return this._sr_Patient; }
+            set {
+                if (this._sr_Patient != value) {
+                    this._sr_Patient = value;
+                    this.NotifyPropertyChanged(nameof(sr_Patient));
                 }
             }
+        }
 
-            private PlanSetup _sr_PlanSetup;
-            public PlanSetup sr_PlanSetup {
-                get { return this._sr_PlanSetup; }
-                set {
-                    if (this._sr_PlanSetup != value) {
-                        this._sr_PlanSetup = value;
-                        this.NotifyPropertyChanged(nameof(sr_PlanSetup));
-                    }
+        private PlanSetup _sr_PlanSetup;
+        public PlanSetup sr_PlanSetup {
+            get { return this._sr_PlanSetup; }
+            set {
+                if (this._sr_PlanSetup != value) {
+                    this._sr_PlanSetup = value;
+                    this.NotifyPropertyChanged(nameof(sr_PlanSetup));
                 }
             }
+        }
         //REMOVE ABOVE FOR PLUGIN APP
+
+        private double _passingThreshold;
+        public double passingThreshold {
+            get { return this._passingThreshold; }
+            set {
+                if (this._passingThreshold != value) {
+                    this._passingThreshold = value;
+                    this.NotifyPropertyChanged(nameof(passingThreshold));
+                }
+            }
+        }
 
         //property and fucntion for providing notification of data changes, for dynamic data binding.
         public event PropertyChangedEventHandler PropertyChanged;
@@ -108,13 +186,17 @@ namespace PlanCompare_SR {
 
             //Data structure to hold information about the results of a data comparison
             public class ResultsItems {
+                public double passThreshold;
                 public bool result;
                 public string cbName;
+                public SolidColorBrush brush;
 
-                public ResultsItems(string aCBName)
+                public ResultsItems(string aCBName, double aPassThreshold)
                 {
+                    passThreshold = aPassThreshold;
                     result = true;
                     cbName = aCBName;
+                    brush = new SolidColorBrush(Color.FromRgb(0, 255, 0));
                 }
             }
 
@@ -124,117 +206,33 @@ namespace PlanCompare_SR {
 
         public TextBox debugTB;
 
-        //Constructor
-        public DataManager()
+        // * * * Constructor * * *
+        public DataManager(PlanSetup aPlan)
         {
-            theCourses[0] = null;
-            theCourses[1] = null;
-            theCourses[2] = null;
+            courseIDs = new ObservableCollection<string>() { "", "", "" };
+            theCourses = new MyCourseCollection() { null, null, null };
 
+            thePlans = new PlanData[3];
             thePlans[0] = null;
             thePlans[1] = null;
             thePlans[2] = null;
 
             clGeneral = new PlanCompareLists();
             clFields = new List<PlanCompareLists>();
+
+            passingThreshold = 1;
         }
 
 
-        //A function for presenting the plan data.  First it updates the plan info in the general section by accessing the TextBlocks
-        //stored in the passed TextBlock list.  Next, it adds data to the field grid (passed as parameter) wih a column offset.
-        //This function should be agnostic with respect to the interface... just updating the interface objects that are sent.
-        //Last, it calls the SetCompareListForPlan function to update the lists of comparison items and results.
-        //MessageBox.Show("Start of LoadDataForPlan(" + planNum.ToString() + ").");
-        public void SetPlanData(int planNum, Grid aFieldGrid, List<TextBlock> genTextBlockList, List<TextBlock> fldTextBlockList, int gridColOffset) {
-            if (theCourses[planNum] != null) {
-                genTextBlockList[0].Text = theCourses[planNum].Id.ToString();
-
-                if (thePlans[planNum] != null) {
-                    //MessageBox.Show("Made it into the if statements of LoadDataForPlan(" + planNum.ToString() + ").");
-                    PlanSetup aPlan = thePlans[planNum];
-
-                    genTextBlockList[1].Text = aPlan.Id.ToString();
-                    genTextBlockList[2].Text = aPlan.Beams.Count().ToString();
-                    genTextBlockList[3].Text = aPlan.PhotonCalculationModel;
-                    genTextBlockList[4].Text = aPlan.DosePerFraction.ToString();
-                    genTextBlockList[5].Text = aPlan.NumberOfFractions.ToString();
-                    genTextBlockList[6].Text = aPlan.TotalDose.ToString();
-
-                    int fldCount = aPlan.Beams.Count();
-
-                    for (int i = 0; i < fldCount; i++) {
-                        Beam curBeam = aPlan.Beams.ElementAt(i);
-
-                        TextBlock newTB = new TextBlock();
-                        newTB.Text = curBeam.Id;
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 65, 2 + i, gridColOffset + 1);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = curBeam.ControlPoints[0].GantryAngle.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 50, 2 + i, gridColOffset + 2);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = curBeam.ControlPoints[0].CollimatorAngle.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 50, 2 + i, gridColOffset + 3);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = curBeam.ControlPoints[0].PatientSupportAngle.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 50, 2 + i, gridColOffset + 4);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = curBeam.ControlPoints[0].JawPositions.X1.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 5);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = curBeam.ControlPoints[0].JawPositions.X2.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 6);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = curBeam.ControlPoints[0].JawPositions.Y1.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 7);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = curBeam.ControlPoints[0].JawPositions.Y2.ToString();
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 8);
-                        fldTextBlockList.Add(newTB);
-
-                        newTB = new TextBlock();
-                        newTB.Text = string.Format("{0:0.0}", curBeam.Meterset.Value);
-                        AddTextBlockToFieldGridAt(aFieldGrid, newTB, 40, 2 + i, gridColOffset + 9);
-                        fldTextBlockList.Add(newTB);
-                    }
-
-                    string tVolId = aPlan.TargetVolumeID;
-                    Structure tStruct;
-                    DoseValue tMinVolDose;
-                    DoseValue tMaxVolDose;
-
-                    string tVolDoseStr;
-                    foreach(Structure aStruct in aPlan.StructureSet.Structures) {
-                        string tempStr = aStruct.Id;
-                        if(aStruct.Id.ToString() == tVolId) {
-                            tStruct = aStruct;
-                            tMinVolDose = aPlan.GetDoseAtVolume(tStruct, 100, VolumePresentation.Relative, DoseValuePresentation.Relative);
-                            tMaxVolDose = aPlan.GetDoseAtVolume(tStruct, 0, VolumePresentation.Relative, DoseValuePresentation.Relative);
-
-                            tVolDoseStr = tMinVolDose.ValueAsString;
-                        }
-                    }
-
-                    //MessageBox.Show("Just before checking if planNum is 2.  Current planNum = " + planNum.ToString() );
-                    if (planNum == 2 && thePlans[1] != null) {
-                        SetCompareLists();
-                        Check_Comparison();
-                    }
+        //Utility function to get a structure object by name string
+        public Structure GetStructureByName(PlanSetup aPlan, string structName)
+        {
+            foreach (Structure aStruct in aPlan.StructureSet.Structures) {
+                if(aStruct.Id == structName) {
+                    return aStruct;
                 }
             }
+            return null;
         }
 
 
@@ -251,14 +249,6 @@ namespace PlanCompare_SR {
         }
 
 
-        //Function to clear all plan data.  Currently, just clears the plan comparison lists, but may be modified for additional
-        //data clearing later.
-        public void ClearPlanData(int planNum)
-        {
-            ClearCompareLists();
-        }
-
-
         //Function for adding plan comparison info to the PlanCompareLists item specified by the plan number.  The General Info
         //is simply a list of CompareListItems.  The Field info is a nested list of lists of CompareListItems, where we add a new 
         //List of CompareListItems for each field.  Thus, to access the comparison data, we have:  planCompLists[planNum].cfields[fieldNum]
@@ -267,40 +257,44 @@ namespace PlanCompare_SR {
 
             //Before continuing, ensure that a plan has been stored in the data manager array of plans for each plan.
             if (thePlans[1] != null && thePlans[2] != null) {
-                //Clear the current plan comparison data, so that we can add new fresh data.
-                ClearCompareLists();
-                int fldCount = thePlans[1].Beams.Count();
+                //Only continue if the number of fields for both plans is equal
+                if(thePlans[1].fields.Count() == thePlans[2].fields.Count()) {
+                    //Clear the current plan comparison data, so that we can add new fresh data.
+                    ClearCompareLists();
+                    int fldCount = thePlans[1].numOfFields;
 
-                //Add an initial result to the General lists.  This is item 0, and will be used to display the All-Fields result.
-                //Note that both the string added is blank and the number added is -999, as this is just a placeholder.
-                AddPlanCompItem(clGeneral, 2, "FieldSummary", -999, "", -999, "", "comp_all_flds_okay");
+                    //Add an initial result to the General lists.  This is item 0, and will be used to display the All-Fields result.
+                    //Note that both the string added is blank and the number added is -999, as this is just a placeholder.
+                    AddPlanCompItem(clGeneral, 2, "FieldSummary", -999, "", -999, "", "comp_all_flds_okay", -1);
 
-                //Add the General field info...
-                AddPlanCompItem(clGeneral, 1, "NumOfFields", thePlans[1].Beams.Count(), "", thePlans[2].Beams.Count(), "", "compNumOfFields");
+                    //Add the General field info...
+                    AddPlanCompItem(clGeneral, 1, "NumOfFields", thePlans[1].numOfFields, "", thePlans[2].numOfFields, "", "compNumOfFields", -1);
+                    AddPlanCompItem(clGeneral, 2, "Fractionation", thePlans[1].dosePerFx, "", thePlans[2].dosePerFx, "", "compFx", -1);
+                    AddPlanCompItem(clGeneral, 2, "Fractionation", thePlans[1].numOfFx, "", thePlans[2].numOfFx, "", "compFx", -1);
+                    AddPlanCompItem(clGeneral, 2, "Fractionation", thePlans[1].totalRxDose, "", thePlans[2].totalRxDose, "", "compFx", -1);
+                    AddPlanCompItem(clGeneral, 1, "MaxDose", thePlans[1].maxDose, "", thePlans[2].maxDose, "", "compMaxDose", passingThreshold);
+                    AddPlanCompItem(clGeneral, 2, "TargetVol", -999, thePlans[1].targVol, -999, thePlans[2].targVol, "compTargVol", -1);
+                    AddPlanCompItem(clGeneral, 1, "MaxTargDose", thePlans[1].targMaxDose, "", thePlans[2].targMaxDose, "", "compMaxTargDose", passingThreshold);
+                    AddPlanCompItem(clGeneral, 1, "MinTargDose", thePlans[1].targMinDose, "", thePlans[2].targMinDose, "", "compMinTargDose", passingThreshold);
+                    AddPlanCompItem(clGeneral, 1, "MeanTargDose", thePlans[1].targMeanDose, "", thePlans[2].targMeanDose, "", "compMeanTargDose", passingThreshold);
 
-                string fxString1 = thePlans[1].DosePerFraction.Dose.ToString() + " x ";
-                fxString1 = fxString1 + thePlans[1].NumberOfFractions.ToString() + " = ";
-                fxString1 = fxString1 + thePlans[1].TotalDose.Dose.ToString();
-                string fxString2 = thePlans[2].DosePerFraction.Dose.ToString() + " x ";
-                fxString2 = fxString2 + thePlans[2].NumberOfFractions.ToString() + " = ";
-                fxString2 = fxString2 + thePlans[2].TotalDose.Dose.ToString();
-                AddPlanCompItem(clGeneral, 2, "Fractionation", -999, fxString1, -999, fxString2, "compFx");
-
-
-                //For each field, add a list of CompareListItems.  Then, add CompareListItems to each inner list for each field parameter.
-                //Also add an entry to the list of field comparison results
-                for (int i = 0; i < fldCount; i++) {
-                    Beam P1_beam = thePlans[1].Beams.ElementAt(i);
-                    Beam P2_beam = thePlans[2].Beams.ElementAt(i);
-                    string fldNumStr = i.ToString();
-                    clFields.Add( new PlanCompareLists());
-                    AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":GantryAngle", P1_beam.ControlPoints[0].GantryAngle, "", P2_beam.ControlPoints[0].GantryAngle, "", "compF" + i.ToString());
-                    AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":CollAngle", P1_beam.ControlPoints[0].CollimatorAngle, "", P2_beam.ControlPoints[0].CollimatorAngle, "", "compF" + i.ToString());
-                    AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":TableAngle", P1_beam.ControlPoints[0].PatientSupportAngle, "", P2_beam.ControlPoints[0].PatientSupportAngle, "", "compF" + i.ToString());
-                    AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":X1", P1_beam.ControlPoints[0].JawPositions.X1, "", P2_beam.ControlPoints[0].JawPositions.X1, "", "compF" + i.ToString());
-                    AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":X2", P1_beam.ControlPoints[0].JawPositions.X2, "", P2_beam.ControlPoints[0].JawPositions.X2, "", "compF" + i.ToString());
-                    AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":Y1", P1_beam.ControlPoints[0].JawPositions.Y1, "", P2_beam.ControlPoints[0].JawPositions.Y1, "", "compF" + i.ToString());
-                    AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":Y2", P1_beam.ControlPoints[0].JawPositions.Y2, "", P2_beam.ControlPoints[0].JawPositions.Y2, "", "compF" + i.ToString());
+                    if (thePlans[1].fields.Count() == thePlans[2].fields.Count()) {
+                        //For each field, add a list of CompareListItems.  Then, add CompareListItems to each inner list for each field parameter.
+                        //Also add an entry to the list of field comparison results
+                        for (int i = 0; i < fldCount; i++) {
+                            FieldData P1_f = thePlans[1].fields[i];
+                            FieldData P2_f = thePlans[2].fields[i];
+                            string fldNumStr = i.ToString();
+                            clFields.Add(new PlanCompareLists());
+                            AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":GantryAngle", P1_f.gantryAngle, "", P2_f.gantryAngle, "", "compF" + i.ToString(), -1);
+                            AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":CollAngle", P1_f.collAngle, "", P2_f.collAngle, "", "compF" + i.ToString(), -1);
+                            AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":TableAngle", P1_f.tableAngle, "", P2_f.tableAngle, "", "compF" + i.ToString(), -1);
+                            AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":X1", P1_f.X1, "", P2_f.X1, "", "compF" + i.ToString(), -1);
+                            AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":X2", P1_f.X2, "", P2_f.X2, "", "compF" + i.ToString(), -1);
+                            AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":Y1", P1_f.Y1, "", P2_f.Y1, "", "compF" + i.ToString(), -1);
+                            AddPlanCompItem(clFields[i], 1, "F" + fldNumStr + ":Y2", P1_f.Y2, "", P2_f.Y2, "", "compF" + i.ToString(), -1);
+                        }
+                    }
                 }
             }
         }
@@ -308,17 +302,30 @@ namespace PlanCompare_SR {
 
         //Utility function for adding items to the comparelists.  Adding all of these at the same time ensures that our index is the same for 
         //all sublists in the PlanCompareLists class object for a given comparison item. 
-        public void AddPlanCompItem(PlanCompareLists theList, int dataType, string dataTag, double P1_numData, string P1_stringData, double P2_numData, string P2_stringData, string cbName)
+        public void AddPlanCompItem(PlanCompareLists theList, int dataType, string dataTag, double P1_numData, string P1_stringData, double P2_numData, string P2_stringData, string cbName, double thePassThreshold)
         {
             theList.dataInfo.Add(new CLDataInfo(dataType, dataTag));
             theList.plan1List.Add(new CompareListItem(P1_numData, P1_stringData));
             theList.plan2List.Add(new CompareListItem(P2_numData, P2_stringData));
-            theList.resultList.Add(new ResultsItems(cbName));
+            //passingThreshold should be set to -1 for comparison items that are not using a passing threshold
+            theList.resultList.Add(new ResultsItems(cbName, thePassThreshold));
             theList.count = theList.count + 1;
         }
 
 
-        //Clear the PlanCompareLists class data, and also clears the PlanCompareResults data.
+        //Find the compare lists index for a particulare plan data, by the stored dataTag in the dataInfo list.
+        public int GetCompareListIndexByTag(PlanCompareLists aPlanCompareListsObj, string aDataTag)
+        {
+            for (int i = 0; i < aPlanCompareListsObj.count; i++) {
+                if(aPlanCompareListsObj.dataInfo[i].dataTag == aDataTag) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+
+        //Clear the PlanCompareLists class of all data, including all the sub-lists.
         public void ClearCompareLists()
         {
             if (clGeneral.dataInfo != null) { clGeneral.dataInfo.Clear(); }
@@ -334,75 +341,103 @@ namespace PlanCompare_SR {
                 if (pcList.resultList != null) { pcList.resultList.Clear(); }
                 pcList.count = 0;
             }
-
             clFields.Clear();
         }
 
 
-
-        //A function for comparing plans. Starts by comparing the general info.  Sets marker to red if doesn't match.
+        //These two functions are for comparing plans. This one compares the general info.  Sets marker to red if doesn't match.
         //For field data, starts by assuming that the data for each field matches, and sets the field_okay marker
-        //to green.  Then, itereates through and sets the field_okay marker to red if it encounters a discrepancy.
-        public void Check_Comparison()
+        //to green.  
+        public void Check_General_Comparisons()
         {
             int compGenCnt = clGeneral.count;
-            int compFldCnt = clFields.Count();
 
             //Iterate through the general info.  Compare either numeric or string data.  Set the results list item to the boolean of whether the
             //two data items are equal.
             //Start from item 1, as item 0 is reserved for the all-fields result, and will be updated below.
             for (int i = 1; i < compGenCnt; i++) {
                 if (clGeneral.dataInfo[i].dataType == 1) {
-                    clGeneral.resultList[i].result = clGeneral.plan1List[i].numData == clGeneral.plan2List[i].numData;
-                    debugTB.AppendText("Plan1 clGenInfo[" + i.ToString() + "] = " + clGeneral.plan1List[i].numData.ToString() + "\r\n");
-                    debugTB.AppendText("Plan2 clGenInfo[" + i.ToString() + "] = " + clGeneral.plan2List[i].numData.ToString() + "\r\n");
+                    //Check to see if there is a passing threshold.  If there is, calc the percent difference, and see if that is
+                    //greater than the threshold.  Otherwise, just do direct comparison of the values.  Pass threshold is set to "-1"
+                    //for values that do NOT use a passing threshold.
+                    if(clGeneral.resultList[i].passThreshold != -1) {
+                        double diff = 100 * ((clGeneral.plan2List[i].numData - clGeneral.plan1List[i].numData) / clGeneral.plan1List[i].numData);
+                        diff = Math.Abs(diff);
+                        if(diff > clGeneral.resultList[i].passThreshold) {
+                            clGeneral.resultList[i].result = false;
+                        }
+                        else {
+                            clGeneral.resultList[i].result = true;
+                        }
+
+                    }
+                    else {
+                        clGeneral.resultList[i].result = clGeneral.plan1List[i].numData == clGeneral.plan2List[i].numData;
+                    }
+                    
                 }
                 if (clGeneral.dataInfo[i].dataType == 2) {
                     clGeneral.resultList[i].result = clGeneral.plan1List[i].stringData == clGeneral.plan2List[i].stringData;
-                    debugTB.AppendText("Plan1 clGenInfo[" + i.ToString() + "] = " + clGeneral.plan1List[i].stringData + "\r\n");
-                    debugTB.AppendText("Plan2 clGenInfo[" + i.ToString() + "] = " + clGeneral.plan2List[i].stringData + "\r\n");
                 }
             }
 
-            if (thePlans[1].Beams.Count() != thePlans[2].Beams.Count()) {
-                MessageBox.Show("The two plans have different numbers of fields.  Field comparison cannot be done.");
-                return;
-            }
-
-            //Iterate through the field info starting with index 1, since index 0 is reserved for representing the entire list.  
-            //Compare either numeric or string data.  Set the results list item to the boolean of whether the two data items are equal and the 
-            //logical AND of the current state of the field comparison boolean.  This way, if even one paramter compares to 'false', the result
-            //for the entire field is set to 'false'.
-            bool curAllFieldsBool = clGeneral.resultList[0].result;  //track the cumulative boolean for all fields
-            bool curFieldBool = true;                               //track the cumulative boolean for all items for each field
-            debugTB.AppendText("Initial All-Fields Bool is" + curAllFieldsBool.ToString() + "\r\n");
-
-            for (int i = 0; i < compFldCnt; i++) {
-                int fieldDataItems = clFields[i].count;
-                debugTB.AppendText("At start of item[" + i.ToString() + "], All-Fields Bool is" + curAllFieldsBool.ToString() + "\r\n");
-
-                for (int j = 0; j < fieldDataItems; j++) {
-                    if (clFields[i].dataInfo[j].dataType == 1) {
-                        clFields[i].resultList[j].result = clFields[i].plan1List[j].numData == clFields[i].plan2List[j].numData;
-                        debugTB.AppendText("Plan1 clFieldInfo[" + i.ToString() + "][" + j.ToString() + "] = " + clFields[i].plan1List[j].numData.ToString() + "\r\n");
-                        debugTB.AppendText("Plan2 clFieldInfo[" + i.ToString() + "][" + j.ToString() + "] = " + clFields[i].plan2List[j].numData.ToString() + "\r\n");
-                    }
-                    if (clFields[i].dataInfo[j].dataType == 2) {
-                        clFields[i].resultList[j].result = clFields[i].plan1List[j].stringData == clFields[i].plan2List[j].stringData;
-                        debugTB.AppendText("Plan1 clFieldInfo[" + i.ToString() + "][" + j.ToString() + "] = " + clFields[i].plan1List[j].stringData + "\r\n");
-                        debugTB.AppendText("Plan2 clFieldInfo[" + i.ToString() + "][" + j.ToString() + "] = " + clFields[i].plan2List[j].stringData + "\r\n");
-                    }
-                    curFieldBool = curFieldBool && clFields[i].resultList[j].result;
-                    debugTB.AppendText("Bool for item[" + i.ToString() + "][" + j.ToString() + "] = " + curFieldBool.ToString() + "\r\n");
-                }
-                debugTB.AppendText("At end of item[" + i.ToString() + "], the field Bool is" + curFieldBool.ToString() + "\r\n");
-                clFields[i].total_bool = curFieldBool;
-                curAllFieldsBool = curAllFieldsBool && curFieldBool;
-                //Update the cumulative result to the clGenResults[0] to track the all-fields result.
-                debugTB.AppendText("At end of item[" + i.ToString() + "], All-Fields Bool is" + curAllFieldsBool.ToString() + "\r\n");
-            }
-            clGeneral.resultList[0].result = curAllFieldsBool;
         }
+
+        //As with the above function, but this one itereates through the field list and sets the field_okay marker to red 
+        //if it encounters a discrepancy.
+        public string Check_Field_Comparisons()
+        {
+            int compFldCnt = clFields.Count();
+
+            if (thePlans[1].numOfFields != thePlans[2].numOfFields) {
+                MessageBox.Show("The two plans have different numbers of fields.  Field comparison will not be done.");
+                return "FAILED";
+            }
+            else {
+                //Iterate through the field info starting with index 1, since index 0 is reserved for representing the entire list.  
+                //Compare either numeric or string data.  Set the results list item to the boolean of whether the two data items are equal and the 
+                //logical AND of the current state of the field comparison boolean.  This way, if even one paramter compares to 'false', the result
+                //for the entire field is set to 'false'.
+                bool curAllFieldsBool = clGeneral.resultList[0].result;  //track the cumulative boolean for all fields
+                bool curFieldBool = true;                               //track the cumulative boolean for all items for each field
+                                                                        //debugTB.AppendText("Initial All-Fields Bool is" + curAllFieldsBool.ToString() + "\r\n");
+
+                for (int i = 0; i < compFldCnt; i++) {
+                    int fieldDataItems = clFields[i].count;
+
+                    for (int j = 0; j < fieldDataItems; j++) {
+                        if (clFields[i].dataInfo[j].dataType == 1) {
+                            clFields[i].resultList[j].result = clFields[i].plan1List[j].numData == clFields[i].plan2List[j].numData;
+                        }
+                        if (clFields[i].dataInfo[j].dataType == 2) {
+                            clFields[i].resultList[j].result = clFields[i].plan1List[j].stringData == clFields[i].plan2List[j].stringData;
+                        }
+                        curFieldBool = curFieldBool && clFields[i].resultList[j].result;
+                    }
+                    clFields[i].total_bool = curFieldBool;
+                    curAllFieldsBool = curAllFieldsBool && curFieldBool;
+                }
+                clGeneral.resultList[0].result = curAllFieldsBool;
+                return "OK";
+            }
+        }
+
+
+        public void UpdatePlanDoseThresholds()
+        {
+            if (thePlans[1] != null && thePlans[2] != null) {
+                SetCompareLists();
+                foreach (ResultsItems rI in clGeneral.resultList) {
+                    if (rI.passThreshold != -1) {
+                        rI.passThreshold = passingThreshold;
+                    }
+                }
+                Check_General_Comparisons();
+                Check_Field_Comparisons();
+            }
+        }
+
+
     }
 
 }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -12,23 +12,24 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using PlanCompare_SR;
+using PlanCompare_SR_DB;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+using static PlanCompare_SR_DB.DataManager;
 
-
-namespace PlanCompare_SR.Views {
+namespace PlanCompare_SR_DB.Views {
     /// <summary>
     /// Interaction logic for mainWindowContents.xaml
     /// </summary>
     public partial class mainWindowContents : UserControl {
+
+
         //public ScriptContext theContext;
         public DataManager theDM;
 
         //USED for ScriptRunner app only... create placeholders for the current course and current plan index.
         int curCourseIdx;
         int curPlanIdx;
-
 
         //Create arrays of lists of TextBlock objects.  These will hold the TextBlock controls for the plan information
         //for each plan.  This gives us a way to update the values of these TextBlocks without needing to repeatedly
@@ -52,54 +53,26 @@ namespace PlanCompare_SR.Views {
         {
             InitializeComponent();
 
-            theDM = new DataManager();
+            //Initialize the temporary data objects used by ScriptRunner.  Remove when changed back to PlugIn.
+            //REMOVE BELOW FOR PLUGIN APP
+            theDM = new DataManager(thePlanSetup);
+            theDM.sr_Patient = thePatient;
+            theDM.sr_PlanSetup = thePlanSetup;
+            //REMOVE ABOVE FOR PLUGIN APP
 
             //Added just for ScriptRunner.  Sets the mainWindowContents datacontext to be the data manager.
             //For the PlugIn app, the data context is the Script Context, and isn't set here, so remove for PlugIn app.
             //REMOVE FOR PLUGIN APP
-                this.DataContext = theDM;
+            this.DataContext = theDM;
             //REMOVE FOR PLUGIN APP
 
             //Initialize our lists of plan general info TextBlocks for easy updating of plan info later.
             //Set index 0 to null, so that we can keep the index matching the actual plan number for readability.
             planGenTBs[0] = null;
 
-            planGenTBs[1] = new List<TextBlock>();
-            planGenTBs[1].Add(this.grid_tb_CourseId1);
-            planGenTBs[1].Add(this.grid_tb_PlanId1);
-            planGenTBs[1].Add(this.grid_tb_NoOfF1);
-            planGenTBs[1].Add(this.grid_tb_Alg1);
-            planGenTBs[1].Add(this.grid_tb_Fx1d);
-            planGenTBs[1].Add(this.grid_tb_Fx1f);
-            planGenTBs[1].Add(this.grid_tb_Fx1t);
-
-            planGenTBs[2] = new List<TextBlock>();
-            planGenTBs[2].Add(this.grid_tb_CourseId2);
-            planGenTBs[2].Add(this.grid_tb_PlanId2);
-            planGenTBs[2].Add(this.grid_tb_NoOfF2);
-            planGenTBs[2].Add(this.grid_tb_Alg2);
-            planGenTBs[2].Add(this.grid_tb_Fx2d);
-            planGenTBs[2].Add(this.grid_tb_Fx2f);
-            planGenTBs[2].Add(this.grid_tb_Fx2t);
-
             planFieldTBs[0] = null;
             planFieldTBs[1] = new List<TextBlock>();
             planFieldTBs[2] = new List<TextBlock>();
-
-            //Add the general results rectangles to the list of general results markers.  Add the All-Fields result first,
-            //so that it is always item 0, and thus we will always know where to find it.
-            rectsGen.Add(this.comp_all_flds_okay);
-            rectsGen.Add(this.compNumOfFields);
-            rectsGen.Add(this.compFx);
-
-            theDM.debugTB = this.tbDebug;
-
-            //Initialize the temporary data objects used by ScriptRunner.  Remove when changed back to PlugIn.
-            //REMOVE BELOW FOR PLUGIN APP
-                theDM.sr_Patient = thePatient;
-                theDM.sr_PlanSetup = thePlanSetup;
-            //REMOVE ABOVE FOR PLUGIN APP
-
 
             //Code added just for ScriptRunner, to set the initial course and plan
             this.cbCourses1.SelectedIndex = -1;
@@ -134,10 +107,9 @@ namespace PlanCompare_SR.Views {
             this.svPlan1.ScrollToVerticalOffset(this.sbPlanCompare.Value);
         }
 
-
         //This function is used to initialize various controls with the current plan data.  This event is fired last in
         //the chain of events that occur when a window is created.  See: https://wpf.2000things.com/tag/window-events/
-        //Used for PlugIn app.  See UserControl_Loaded below for ScripRunner version of this fucntion.
+        //Used for PlugIn app.  This is the PlugIn version... see UserControl_Loaded below for ScripRunner version of this fucntion.
         //private void Window_Loaded(object sender, RoutedEventArgs e)
         //{
         //    this.sbPlanCompare.Maximum = (this.svPlan1.ExtentHeight - this.svPlan1.ActualHeight);
@@ -162,10 +134,11 @@ namespace PlanCompare_SR.Views {
         //}
 
 
-        //This function used for ScriptRunner only.  Remove for PlugIn app.
+        //This ScriptRunner version of the above function.  Remove for PlugIn app.
         //REMOVE BELOW FOR PLUGIN APP
             private void UserControl_Loaded(object sender, RoutedEventArgs e)
             {
+            
                 this.sbPlanCompare.Maximum = (this.svPlan1.ExtentHeight - this.svPlan1.ActualHeight);
 
                 //Code to initialize the Course and Plan drop-downs... if needed.
@@ -181,13 +154,14 @@ namespace PlanCompare_SR.Views {
                 this.cbPlans2.SelectedIndex = -1;  // would fire cbPlans2_SelectionChanged, but we have left that blank for now.
 
                 //Set the initial two rows of the field data grid to height 0.  These rows are the header, and gray separator bar.
-                this.grid_FieldData.RowDefinitions[0].Height = new GridLength(0);
-                this.grid_FieldData.RowDefinitions[1].Height = new GridLength(0);
+                this.fieldsPanel.Height = 0;
 
                 //Set the initial two rows of the field okay grid to height 0.  These rows are both blank.
-                this.grid_FieldsOkay.RowDefinitions[0].Height = new GridLength(0);
-                this.grid_FieldsOkay.RowDefinitions[1].Height = new GridLength(0);
-            }
+                this.field_compOK_header.Height = 0;
+                this.field_compOK_panel.Height = 0;
+
+                //theDM.fldOKBrush = new SolidColorBrush(Color.FromRgb(255, 255, 0));
+        }
         //REMOVE ABOVE FOR PLUGIN APP
 
 
@@ -196,9 +170,11 @@ namespace PlanCompare_SR.Views {
         public void cbCourses1_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (this.cbCourses1.SelectedIndex != -1) {
-                if ((this.cbCourses1.SelectedItem as Course) != null) {
+                Course theCourse = (this.cbCourses1.SelectedItem as Course);
+                if (theCourse != null) {
                     this.cbPlans1.SelectedIndex = -1;
-                    this.cbPlans1.ItemsSource = (this.cbCourses1.SelectedItem as Course).PlanSetups;
+                    this.cbPlans1.ItemsSource = theCourse.PlanSetups;
+                    theDM.theCourses[1] = theCourse;
 
                     //Also, assume that if the first plan is changed, then the user will want to select a different course 2 and
                     //plan 2, so set both of those comboboxes to -1 as well.  Set the Course 2 combobox to match the Course 1 combobox.
@@ -207,7 +183,7 @@ namespace PlanCompare_SR.Views {
                 }
             }
             else {
-                theDM.ClearPlanData(1);
+                //theDM.ClearPlanData(1);
             }
         }
 
@@ -215,15 +191,17 @@ namespace PlanCompare_SR.Views {
         //Same as above for course 1 combobox.  In this case, don't wipe out all plan 1 data structures.
         public void cbCourses2_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.cbCourses2.SelectedIndex != -1) {
-                if ((this.cbCourses2.SelectedItem as Course) != null) {
-                    this.cbPlans2.SelectedIndex = -1;
-                    this.cbPlans2.ItemsSource = (this.cbCourses2.SelectedItem as Course).PlanSetups;
-                    this.cbPlans2.SelectedIndex = -1;
-                }
-            }
-            else {
-                theDM.ClearPlanData(2);
+            //if (this.cbCourses2.SelectedIndex != -1) {
+
+            //}
+            //else {
+            //    //theDM.ClearPlanData(2);
+            //}
+
+            if ((this.cbCourses2.SelectedItem as Course) != null) {
+                this.cbPlans2.SelectedIndex = -1;
+                this.cbPlans2.ItemsSource = (this.cbCourses2.SelectedItem as Course).PlanSetups;
+                this.cbPlans2.SelectedIndex = -1;
             }
         }
 
@@ -234,31 +212,23 @@ namespace PlanCompare_SR.Views {
         public void cbPlans1_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             //Only respond if the plan comobox selected index is not -1.
+            
             if (this.cbPlans1.SelectedIndex != -1) {
-                if ((this.cbPlans1.SelectedItem as PlanSetup) != null) {
-                    theDM.thePlans[1] = (this.cbPlans1.SelectedItem as PlanSetup);
+                PlanSetup thePlan = (this.cbPlans1.SelectedItem as PlanSetup);
+                if (thePlan != null) {
+                    
                     theDM.theCourses[1] = (this.cbCourses1.SelectedItem as Course);
 
-                    //Since the selected plan has changed, clear all plan data, the field data grid, and the field okay grid, to allow for
-                    //adding new rows for the new plan fields.
-                    theDM.ClearPlanData(1);
+                    //Call the Data Manager function that updates the field data.  
+                    theDM.thePlans[1] = new PlanData(thePlan);
+                    theDM.NotifyPropertyChanged("thePlans");
 
-                    if (this.grid_FieldData.RowDefinitions.Count > 2) { RemoveFieldGridRows(); }
-                    AddFieldGridRows(theDM.thePlans[1].Beams.Count());
-                    //this.UpdateLayout();
-                    this.grid_FieldData.UpdateLayout();
-                    this.grid_FieldsOkay.UpdateLayout();
-
-                    //Call the Data Manager function that updates the field data.  We send the Grid object and TextBlock list as the targets
-                    //of the update.  This way, if we change the interface, we can just send the new targets without re-writing the data manager.
-                    theDM.SetPlanData(1, this.grid_FieldData, planGenTBs[1], planFieldTBs[1], 0);
+                    //theDM.SetPlanData(1, thePlan, this.grid_FieldData, planGenTBs[1], planFieldTBs[1], 0);
+                    AddFieldGridRows(this.plan1_fields_panel, theDM.thePlans[1].numOfFields);
 
                     //Lastly, since we changed plan 1, assume that we will need a different plan 2, so clear all of the old plan 2 data.
                     this.cbPlans2.SelectedIndex = -1;
-                    ClearTBsForPlan(2);
-                    ResetComparisonBoxes();
-                    theDM.ClearPlanData(2);
-
+                    SetComparisonBoxesGray();
                 }
                 else {
                     MessageBox.Show("Warning: Current PlanSetup for selected 'plan 1' is null.  Cannot use.");
@@ -267,10 +237,9 @@ namespace PlanCompare_SR.Views {
             else {
                 //If plan1 selected index = -1, then no plan is selected.  Check to see if there are field data grid rows.
                 //If there are, then remove them.  Also, send the ClearPlanData command to the Data Manager.
-                if (this.grid_FieldData.RowDefinitions.Count > 2) {
-                    ResetComparisonBoxes();
-                    theDM.ClearPlanData(1);
-                    RemoveFieldGridRows();
+                if (this.plan1_fields_panel.Children.Count > 0) {
+                    SetComparisonBoxesGray();
+                    RemoveFieldGridRows(this.plan1_fields_panel);
                 }
             }
         }
@@ -279,163 +248,159 @@ namespace PlanCompare_SR.Views {
         //Same as above for plan 1 combobox.
         public void btn_LoadPlan2_Click(object sender, RoutedEventArgs e)
         {
-            Course selCourse1 = (this.cbCourses1.SelectedItem as Course);
-            Course selCourse2 = (this.cbCourses2.SelectedItem as Course);
-            PlanSetup selPlan1 = (this.cbPlans1.SelectedItem as PlanSetup);
-            PlanSetup selPlan2 = (this.cbPlans2.SelectedItem as PlanSetup);
-
             //Only respond if the plan comobox selected index is not -1.
             if (this.cbPlans2.SelectedIndex != -1) {
-                if (selCourse1.Id != selCourse2.Id | selPlan1.Id != selPlan2.Id) {
-                    if ((this.cbPlans2.SelectedItem as PlanSetup) != null) {
-                        theDM.thePlans[2] = (this.cbPlans2.SelectedItem as PlanSetup);
+                Course selCourse1 = (this.cbCourses1.SelectedItem as Course);
+                Course selCourse2 = (this.cbCourses2.SelectedItem as Course);
+                PlanSetup curPlan1 = (this.cbPlans1.SelectedItem as PlanSetup);
+                PlanSetup curPlan2 = (this.cbPlans2.SelectedItem as PlanSetup); 
+                
+                if (selCourse1.Id != selCourse2.Id | curPlan1.Id != curPlan2.Id) {
+                    if (curPlan2 != null) {
+
                         theDM.theCourses[2] = (this.cbCourses2.SelectedItem as Course);
 
-                        int curFieldRows = this.grid_FieldData.RowDefinitions.Count() - 2;
-                        int plan2FieldCount = theDM.thePlans[2].Beams.Count();
-                        if (plan2FieldCount > curFieldRows) {
-                            AddFieldGridRows(plan2FieldCount - curFieldRows);
-                        }
+                        //Call the Data Manager function that updates the field data.  
+                        theDM.thePlans[2] = new PlanData(curPlan2);
+                        theDM.NotifyPropertyChanged("thePlans");
 
-                        //Call the Data Manager function that updates the field data.  We send the Grid object and TextBlock list as the targets
-                        //of the update.  This way, if we change the interface, we can just send the new targets without re-writing the data manager.
-                        ClearTBsForPlan(2);
-                        ResetComparisonBoxes();
-                        theDM.SetPlanData(2, this.grid_FieldData, planGenTBs[2], planFieldTBs[2], 10);
-                        UpdateFieldOkayResults();
+                        AddFieldGridRows(this.plan2_fields_panel, theDM.thePlans[2].numOfFields);
+                        
+                        theDM.SetCompareLists();
+                        theDM.Check_General_Comparisons();
+
+                        if(theDM.Check_Field_Comparisons() == "OK"){
+                            UpdateComparisonBoxes();
+                        }
+                        else {
+                            SetComparisonBoxesGray();
+                        }
+                        
                     }
                     else {
                         MessageBox.Show("Warning:  Current PlanSetup for selected 'plan 2' is null.  Cannot use.");
                     }
                 }
                 else {
-                    ClearTBsForPlan(2);
-                    ResetComparisonBoxes();
-                    theDM.ClearPlanData(2);
+                    SetComparisonBoxesGray();
                 }
             }
         }
 
 
-        public void AddFieldGridRows(int numOfRows)
+        public void AddFieldGridRows(StackPanel theSP, int numOfRows)
         {
             //Create new RowDefinition and then, for each field in the plan, add a row to both the field_data grid
             //and the field_okay grid.  For the field_okay grid, add a rectangle for the comparison marker.
-            RowDefinition newRow = new RowDefinition();
+
+            //Remove all filed rows to start from a clean slate.
+            RemoveFieldGridRows(theSP);
+
             for (int i = 0; i < numOfRows; i++) {
-                //MessageBox.Show("Made it into the if statements of AddFieldGridRows.");
-                this.grid_FieldData.RowDefinitions.Add(new RowDefinition());
-                this.grid_FieldsOkay.RowDefinitions.Add(new RowDefinition());
-
-                //Check if the field expander is currently expanded.  If so, set row height to 24. If not, set to 0.
-                if (this.fieldGridExpander.IsExpanded) {
-                    this.grid_FieldData.RowDefinitions[2 + i].Height = new GridLength(24);
-                    this.grid_FieldsOkay.RowDefinitions[2 + i].Height = new GridLength(24);
-                }
-                else {
-                    this.grid_FieldData.RowDefinitions[2 + i].Height = new GridLength(0);
-                    this.grid_FieldsOkay.RowDefinitions[2 + i].Height = new GridLength(0);
-                }
-
-                //Create new rectangles for the field_okay grid.  Set the color to Green.
-                Rectangle newRect = new Rectangle();
-                newRect.Height = 20;
-                newRect.Width = 20;
-                newRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
-                newRect.Margin = new Thickness(0, 4, 0, 4);
-                newRect.Name = "compF" + i.ToString();
-                this.grid_FieldsOkay.Children.Add(newRect);
-                Grid.SetRow(newRect, 1 + i);
-                Grid.SetColumn(newRect, 0);
-
-                //Add the rectangle to the rectsField list.
-                this.rectsField.Add(newRect);
-
-                //This is just added for debuging purposes.  Okay to delete once this function is validated.
-                //this.tbDebug.AppendText("Rect Name for Field " + i.ToString() + " is: " + newRect.Name + "\r\n");
+                MakeNewFieldPanel(theSP);
             }
 
-            for(int i = 0; i < numOfRows; i++) {
-                //Create a thin rectangle for each grid row, to act as the gray separator in column 10.
-                Rectangle newRect = new Rectangle();
-                newRect.Height = 24;
-                newRect.Width = 2;
-                newRect.Fill = new SolidColorBrush(Color.FromRgb(211, 211, 211));
-                newRect.Margin = new Thickness(13, 0, 13, 0);
-                this.grid_FieldData.Children.Add(newRect);
-                Grid.SetRow(newRect, 2 + i);
-                Grid.SetColumn(newRect, 10);
+            int numOfFlds = Math.Max(this.plan1_fields_panel.Children.Count, this.plan2_fields_panel.Children.Count);
+            int numOfOKRows = this.field_compOK_panel.Children.Count;
+            if (numOfOKRows < numOfRows) {
+                for (int i = 0; i < (numOfFlds - numOfOKRows); i++) {
+                    //Create new rectangles for the field_okay grid.  Set the color to Green.
+                    Rectangle newRect = new Rectangle();
+                    newRect.Height = 16;
+                    newRect.Width = 20;
+                    newRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+                    newRect.Margin = new Thickness(0, 2, 0, 2);
+                    newRect.Name = "compF" + i.ToString();
+                    this.field_compOK_panel.Children.Add(newRect);  // <--  Create new funtion to make a field OK checkbox panel
+
+                    //Add the rectangle to the rectsField list.
+                    this.rectsField.Add(newRect);
+                }
             }
         }
 
 
-        public void RemoveFieldGridRows()
+        //Utility function 
+        public StackPanel MakeNewFieldPanel(StackPanel parentPanel)
+        {
+            StackPanel newSP = new StackPanel();
+            newSP.Orientation = Orientation.Horizontal;
+            newSP.Width = 447;
+            newSP.Height = 20;
+            parentPanel.Children.Add(newSP);            
+            
+            int curFldNum = parentPanel.Children.Count;
+            if(parentPanel.Uid == "" | parentPanel.Uid == null) {
+                MessageBox.Show("Expect plan number in " + nameof(parentPanel) + "'s UID property.  Instead, UID is blank or null.");
+                System.Windows.Application.Current.Shutdown();
+                return newSP;
+            }
+            else {
+                int curPlanNum = Convert.ToInt32(parentPanel.Uid);
+                FieldData curField = theDM.thePlans[curPlanNum].fields[curFldNum];
+
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 70, nameof(curField.fieldId), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 50, nameof(curField.gantryAngle), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 50, nameof(curField.collAngle), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 50, nameof(curField.tableAngle), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 40, nameof(curField.X1), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 40, nameof(curField.X2), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 40, nameof(curField.Y1), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 40, nameof(curField.Y2), curField);
+                AddFieldTextBlockToPanel(newSP, curPlanNum, curFldNum, 50, nameof(curField.MUs), curField);
+                return newSP;
+            }
+        }
+
+
+        public void AddFieldTextBlockToPanel(StackPanel theSP, int planNum, int fldNum, int width, string idText, object curFieldProp)
+        {
+            TextBlock newTb = new TextBlock();
+            newTb.Width = width;
+            newTb.Name = "p" + planNum + "_f" + fldNum + "_" + idText;
+            newTb.TextAlignment = TextAlignment.Center;
+            newTb.FontSize = 12;
+            theSP.Children.Add(newTb);
+
+            Binding b = new Binding(idText);
+            b.Source = curFieldProp;
+            b.Mode = BindingMode.OneWay;
+            b.StringFormat = "{0:N1}";
+            newTb.SetBinding(TextBlock.TextProperty, b);
+        }
+
+
+        public void RemoveFieldGridRows(StackPanel theSP)
         {
             //First, get the number or rows in the field data grid
-            int curNumOfRows = this.grid_FieldData.RowDefinitions.Count;
-            int curNumOfChildren = this.grid_FieldData.Children.Count;
-            //Check to see if there are rows that need to be removed.  If so, remove all but the first two rows.  
-            //The first two rows are the header and separator bar, which are rows 0 and 1 respectively.
-            if (curNumOfRows > 2) {
-                //Next, check each child control.  If it's row number is greater than 1, remove it.
-                //We have to use a standard FOR loop here, as FOREACH is not allowed if we are altering the collection as we iterate.
-                for (int i = (curNumOfChildren - 1); i >= 0; i--) {
-                    int tbRow = Grid.GetRow(this.grid_FieldData.Children[i]);
-                    if (tbRow > 1) { this.grid_FieldData.Children.Remove(this.grid_FieldData.Children[i]); }
-                }
-                //Next, remove the grid rows themselves... starting from the highest index, working our way down to row 1, where we stop.
-                for (int i = (curNumOfRows - 1); i > 1; i--) {
-                    this.grid_FieldData.RowDefinitions.RemoveAt(i);
-                }
+            int curNumOfRows = theSP.Children.Count;
+            if (curNumOfRows > 0) {
+                theSP.Children.Clear(); 
             }
 
             //Repeat for the field okay grid...
-            curNumOfRows = this.grid_FieldsOkay.RowDefinitions.Count();
+            curNumOfRows = this.field_compOK_panel.Children.Count;
+            if (curNumOfRows > 0) {
+                this.field_compOK_panel.Children.Clear(); 
+            }
 
             //Clear the rectsField list
             rectsField.Clear();
 
-            if (curNumOfRows > 2) {
-                //For the field okay grid, children are easy, because in it's default state... there shouldn't be any children.
-                //So, if we need to remove grid rows, we just clear all children.
-                this.grid_FieldsOkay.Children.Clear();
-                //Next, remove the grid rows themselves... starting from the highest index, working our way down to row 1, where we stop.
-                for (int i = (curNumOfRows - 1); i > 1; i--) {
-                    this.grid_FieldsOkay.RowDefinitions.RemoveAt(i);
-                }
-            }
-
-        }
-
-
-        //Deletes all the TextBlock controls in the field data grid that are associated with the plan.
-        public void ClearTBsForPlan(int planNum)
-        {
-            //Set the text for the general TextBlocks to be blank ("").
-            int cnt = planGenTBs[planNum].Count();
-            for (int i = 0; i < cnt; i++) {
-                planGenTBs[planNum][i].Text = "";
-            }
-
-            cnt = planFieldTBs[planNum].Count();
-            for (int i = cnt - 1; i >= 0; i--) {
-                this.grid_FieldData.Children.Remove(planFieldTBs[planNum][i]);
-            }
-            planFieldTBs[planNum].Clear();
-
-            this.grid_FieldData.UpdateLayout();
         }
 
 
         //Sets all the plan comparison result boxes to be green
-        public void ResetComparisonBoxes()
+        public void SetComparisonBoxesGray()
         {
-            foreach (Rectangle aRect in rectsGen) {
-                aRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+            var rects = this.general_compOK_panel.Children.OfType<Rectangle>();
+
+            foreach(Rectangle rect in rects) {
+                rect.Fill = new SolidColorBrush(Color.FromRgb(128, 128, 128));
             }
 
-            foreach (Rectangle aRect in rectsField) {
-                aRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+            foreach (Rectangle rect in this.field_compOK_panel.Children) {
+                rect.Fill = new SolidColorBrush(Color.FromRgb(128, 128, 128));
             }
         }
 
@@ -444,7 +409,7 @@ namespace PlanCompare_SR.Views {
         //For the general info markers, some of these markers consolidate more than 1 data point (such as the fractionation results) 
         //where each data point is checked separately.  So, before we set the result marker, we first check to see if it's already red, 
         //and only allow it to be set to green if it's not already red.
-        public void UpdateFieldOkayResults()
+        public void UpdateComparisonBoxes()
         {
             //int cntGen = theDM.planCompareResults.clGenResults.Count();
             int cntGen = theDM.clGeneral.count;
@@ -452,14 +417,12 @@ namespace PlanCompare_SR.Views {
 
             //iterate through the general comparison list, setting the result boxes to red or green appropriately
             for (int i = 0; i < cntGen; i++) {
-                bool isNotRed = ((SolidColorBrush)rectsGen[i].Fill).Color.R == 0;
+                Rectangle theRect = (Rectangle)GetControlByName(this.general_compOK_panel, theDM.clGeneral.resultList[i].cbName);
 
-                if ( (theDM.clGeneral.resultList[i].result == true) && isNotRed ) {
-                    Rectangle theRect = (Rectangle)GetControlByName(this.panelCompCheckboxes, theDM.clGeneral.resultList[i].cbName);
+                if (theDM.clGeneral.resultList[i].result == true) {
                     theRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
                 }
                 else {
-                    Rectangle theRect = (Rectangle)GetControlByName(this.panelCompCheckboxes, theDM.clGeneral.resultList[i].cbName);
                     theRect.Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0));
                 }
             }
@@ -468,13 +431,12 @@ namespace PlanCompare_SR.Views {
             for (int i = 0; i < cntFld; i++) {
                 int cntFldItems = theDM.clFields[i].count;
                 for (int j = 0; j < cntFldItems; j++) {
+                    Rectangle theRect = (Rectangle)GetControlByName(this.field_compOK_panel, theDM.clFields[i].resultList[j].cbName);
 
                     if (theDM.clFields[i].total_bool == true) {
-                        Rectangle theRect = (Rectangle)GetControlByName(this.grid_FieldsOkay, theDM.clFields[i].resultList[j].cbName);
                         theRect.Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0));
                     }
                     else {
-                        Rectangle theRect = (Rectangle)GetControlByName(this.grid_FieldsOkay, theDM.clFields[i].resultList[j].cbName);
                         theRect.Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0)); 
                     }
                 }  
@@ -501,14 +463,9 @@ namespace PlanCompare_SR.Views {
         //field_okay grids to their nominal values.
         public void Expander_Expanded(object sender, RoutedEventArgs e)
         {
-            int cnt = (this.cbPlans1.SelectedItem as PlanSetup).Beams.Count();
-            this.grid_FieldData.RowDefinitions[0].Height = new GridLength(24);
-            this.grid_FieldData.RowDefinitions[1].Height = new GridLength(4);
-            this.grid_FieldsOkay.RowDefinitions[0].Height = new GridLength(24);
-            for (int i = 0; i < cnt; i++) {
-                this.grid_FieldData.RowDefinitions[2 + i].Height = new GridLength(24);
-                this.grid_FieldsOkay.RowDefinitions[1 + i].Height = new GridLength(24);
-            }
+            this.fieldsPanel.Height = Double.NaN;
+            this.field_compOK_header.Height = 24;
+            this.field_compOK_panel.Height = Double.NaN;
         }
 
 
@@ -516,45 +473,64 @@ namespace PlanCompare_SR.Views {
         //field_okay grids to zero (0).  Note, the grid rows and all their controls are still there, you just can't see them.
         public void Expander_Collapsed(object sender, RoutedEventArgs e)
         {
-            int cnt = (this.cbPlans1.SelectedItem as PlanSetup).Beams.Count();
-            this.grid_FieldData.RowDefinitions[0].Height = new GridLength(0);
-            this.grid_FieldData.RowDefinitions[1].Height = new GridLength(0);
-            for (int i = 0; i < cnt; i++) {
-                this.grid_FieldData.RowDefinitions[2 + i].Height = new GridLength(0);
-                this.grid_FieldsOkay.RowDefinitions[1 + i].Height = new GridLength(0);
-            }
+            this.fieldsPanel.Height = 0;
+            this.field_compOK_header.Height = 0;
+            this.field_compOK_panel.Height = 0;
         }
 
 
-        private void btn_TestRowDelete_Click(object sender, RoutedEventArgs e)
+        private void btn_percent_up_Click(object sender, RoutedEventArgs e)
         {
-            RemoveFieldGridRows();
+            theDM.passingThreshold = theDM.passingThreshold + 1;
         }
 
 
-        public void PostComparisonToDebug()
+        private void btn_percent_down_Click(object sender, RoutedEventArgs e)
         {
-            int cntGen = theDM.clGeneral.count;
-            int cntFld = theDM.clFields.Count();
-
-            for (int i = 0; i < cntGen; i++) {
-                this.tbDebug.AppendText("General comparison results for item " + i.ToString() + " is: " + theDM.clGeneral.resultList[i].result.ToString() + "\r\n");
-            }
-            for (int i = 0; i < cntFld; i++) {
-                int cntFldItems = theDM.clFields[i].count;
-                for (int j = 0; j < cntFldItems; j++) {
-                    this.tbDebug.AppendText("Field comparison results for item " + i.ToString() + " is: " + theDM.clFields[i].resultList[j].result.ToString() + "\r\n");
-                }
-            }
+            theDM.passingThreshold = theDM.passingThreshold - 1;
         }
 
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void tbx_passThreshold_TextChanged(object sender, TextChangedEventArgs e)
         {
-            PostComparisonToDebug();
+            //theDM.passingThreshold = Convert.ToDouble(this.tbx_passThreshold.Text);
         }
 
+        private void btn_plus_one_Click(object sender, RoutedEventArgs e)
+        {
+            theDM.passingThreshold = theDM.passingThreshold + 1.0;
+            theDM.UpdatePlanDoseThresholds();
+            UpdateComparisonBoxes();
+        }
 
+        private void btn_minus_one_Click(object sender, RoutedEventArgs e)
+        {
+            theDM.passingThreshold = theDM.passingThreshold - 1.0;
+            theDM.UpdatePlanDoseThresholds();
+            UpdateComparisonBoxes();
+        }
+
+        private void btn_plus_one_tenth_Click(object sender, RoutedEventArgs e)
+        {
+            theDM.passingThreshold = theDM.passingThreshold + 0.1;
+            theDM.UpdatePlanDoseThresholds();
+            UpdateComparisonBoxes();
+        }
+
+        private void btn_minus_one_tenth_Click(object sender, RoutedEventArgs e)
+        {
+            theDM.passingThreshold = theDM.passingThreshold - 0.1;
+            theDM.UpdatePlanDoseThresholds();
+            UpdateComparisonBoxes();
+        }
+
+        private void tbx_passThreshold_TextChanged_1(object sender, TextChangedEventArgs e)
+        {
+            double newPT = Convert.ToDouble(this.tbx_passThreshold.Text);
+            theDM.passingThreshold = newPT;
+            theDM.UpdatePlanDoseThresholds();
+            UpdateComparisonBoxes();
+        }
 
     }
 }
